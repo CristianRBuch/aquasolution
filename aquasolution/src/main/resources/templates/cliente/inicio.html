@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqua Solution - Portal Cliente</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --azul-principal: #1e4d8c; --azul-oscuro: #1a3d6e; }
+        body { background-color: #f0f4f8; }
+        .topbar { background: linear-gradient(135deg, var(--azul-oscuro), var(--azul-principal)); padding: 15px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .card-custom { border-radius: 15px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.3s; }
+        .card-custom:hover { transform: translateY(-3px); }
+        .stat-icon { width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .badge-abierto { background-color: #0077b6; }
+        .badge-proceso { background-color: #f77f00; }
+        .badge-resuelto { background-color: #2dc653; }
+        .badge-cerrado { background-color: #6c757d; }
+        .badge-pendiente { background-color: #f77f00; }
+        .badge-aprobada { background-color: #2dc653; }
+        .badge-rechazada { background-color: #e63946; }
+        .badge-vencida { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+<div class="topbar d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-3">
+        <img th:src="@{/img/logo_blanco.png}" alt="Aqua Solution" height="50">
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="text-white text-end">
+            <span class="fw-semibold d-block" th:text="${cliente.nombreCompleto}">Cliente</span>
+            <small class="opacity-75">Portal Cliente</small>
+        </div>
+        <form th:action="@{/logout}" method="post" class="d-inline">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-outline-light btn-sm rounded-3">
+                <i class="fas fa-sign-out-alt me-1"></i>Salir
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="container-fluid p-4">
+    <div th:if="${exito}" class="alert alert-success alert-dismissible fade show rounded-3">
+        <i class="fas fa-check-circle me-2"></i><span th:text="${exito}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3">
+        <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Bienvenido, <span th:text="${cliente.nombreCompleto}"></span></h4>
+            <p class="text-muted mb-0">Aquí puedes ver el estado de tus servicios y cotizaciones.</p>
+        </div>
+        <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#modalSolicitar">
+            <i class="fas fa-plus me-2"></i>Solicitar Servicio
+        </button>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card card-custom p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><p class="text-muted mb-1 small">Mis Solicitudes</p><h2 class="fw-bold mb-0" th:text="${totalTickets}">0</h2></div>
+                    <div class="stat-icon bg-primary bg-opacity-10"><i class="fas fa-ticket-alt fa-lg text-primary"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card card-custom p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><p class="text-muted mb-1 small">Mis Cotizaciones</p><h2 class="fw-bold mb-0" th:text="${totalCotizaciones}">0</h2></div>
+                    <div class="stat-icon bg-success bg-opacity-10"><i class="fas fa-file-invoice-dollar fa-lg text-success"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold mb-0"><i class="fas fa-ticket-alt me-2 text-primary"></i>Mis Solicitudes de Servicio</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th class="px-4 py-3">#</th>
+                    <th class="py-3">Servicio</th>
+                    <th class="py-3">Descripción</th>
+                    <th class="py-3">Estado</th>
+                    <th class="py-3">Técnico</th>
+                    <th class="py-3">Fecha</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ticket : ${tickets}">
+                    <td class="px-4 py-3 fw-semibold" th:text="${ticket.id}"></td>
+                    <td class="py-3 fw-semibold" th:text="${ticket.titulo}"></td>
+                    <td class="py-3 small text-muted" th:text="${ticket.descripcion}"></td>
+                    <td class="py-3">
+                        <span th:if="${ticket.estado.name() == 'ABIERTO'}" class="badge badge-abierto">ABIERTO</span>
+                        <span th:if="${ticket.estado.name() == 'EN_PROCESO'}" class="badge badge-proceso">EN PROCESO</span>
+                        <span th:if="${ticket.estado.name() == 'RESUELTO'}" class="badge badge-resuelto">RESUELTO</span>
+                        <span th:if="${ticket.estado.name() == 'CERRADO'}" class="badge badge-cerrado">CERRADO</span>
+                    </td>
+                    <td class="py-3">
+                        <span th:if="${ticket.tecnico != null}" th:text="${ticket.tecnico.nombreCompleto}"></span>
+                        <span th:if="${ticket.tecnico == null}" class="text-muted">Pendiente de asignación</span>
+                    </td>
+                    <td class="py-3 small" th:text="${#temporals.format(ticket.fechaCreacion, 'dd/MM/yyyy')}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(tickets)}">
+                    <td colspan="6" class="text-center py-4 text-muted">No tienes solicitudes registradas. ¡Haz tu primera solicitud!</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card card-custom">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold mb-0"><i class="fas fa-file-invoice-dollar me-2 text-success"></i>Mis Cotizaciones</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th class="px-4 py-3">N° Cotización</th>
+                    <th class="py-3">Total</th>
+                    <th class="py-3">Estado</th>
+                    <th class="py-3">Fecha</th>
+                    <th class="py-3">PDF</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cotizacion : ${cotizaciones}">
+                    <td class="px-4 py-3 fw-semibold" th:text="${cotizacion.numeroCotizacion}"></td>
+                    <td class="py-3 text-success fw-semibold" th:text="'Q. ' + ${cotizacion.total}"></td>
+                    <td class="py-3">
+                        <span th:if="${cotizacion.estado.name() == 'PENDIENTE'}" class="badge badge-pendiente">PENDIENTE</span>
+                        <span th:if="${cotizacion.estado.name() == 'APROBADA'}" class="badge badge-aprobada">APROBADA</span>
+                        <span th:if="${cotizacion.estado.name() == 'RECHAZADA'}" class="badge badge-rechazada">RECHAZADA</span>
+                        <span th:if="${cotizacion.estado.name() == 'VENCIDA'}" class="badge badge-vencida">VENCIDA</span>
+                    </td>
+                    <td class="py-3 small" th:text="${#temporals.format(cotizacion.fechaCreacion, 'dd/MM/yyyy')}"></td>
+                    <td class="py-3">
+                        <a th:href="@{/cotizaciones/pdf/{id}(id=${cotizacion.id})}" class="btn btn-sm btn-outline-success rounded-3">
+                            <i class="fas fa-file-pdf"></i> Descargar
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(cotizaciones)}">
+                    <td colspan="5" class="text-center py-4 text-muted">No tienes cotizaciones registradas.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalSolicitar" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1a3d6e, #1e4d8c);">
+                <h5 class="modal-title text-white"><i class="fas fa-plus me-2"></i>Solicitar Servicio</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formSolicitar" th:action="@{/cliente/solicitar}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="prioridad" value="MEDIA">
+                <!-- CAMPO HIDDEN QUE ENVÍA EL TÍTULO -->
+                <input type="hidden" name="titulo" id="inputTitulo" value="">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Tipo de Servicio</label>
+                            <select class="form-select rounded-3" id="tipoServicio"
+                                    onchange="mostrarOtro(this)" required>
+                                <option value="">Seleccionar servicio...</option>
+                                <option value="Mantenimiento de Piscina">🏊 Mantenimiento de Piscina</option>
+                                <option value="Mantenimiento de Jacuzzi">🛁 Mantenimiento de Jacuzzi</option>
+                                <option value="Instalación de Bomba de Agua">💧 Instalación de Bomba de Agua</option>
+                                <option value="Reparación de Bomba de Agua">🔧 Reparación de Bomba de Agua</option>
+                                <option value="Repuestos de Equipo de Bombeo">⚙️ Repuestos de Equipo de Bombeo</option>
+                                <option value="Sistema de Riego">🌱 Sistema de Riego</option>
+                                <option value="Instalación de Calentador">🔥 Instalación de Calentador</option>
+                                <option value="Reparación de Calentador">🔥 Reparación de Calentador</option>
+                                <option value="Servicio de Hidrolavadora">🚿 Servicio de Hidrolavadora</option>
+                                <option value="Dosificación de Químicos">🧪 Dosificación de Químicos</option>
+                                <option value="Otro">📝 Otro (describir)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12" id="campoOtro" style="display:none;">
+                            <label class="form-label fw-semibold">Especifica el servicio</label>
+                            <input type="text" id="tituloOtro" class="form-control rounded-3"
+                                   placeholder="Describe brevemente el servicio...">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Marca del equipo <small class="text-muted">(si aplica)</small></label>
+                            <input type="text" name="marcaEquipo" class="form-control rounded-3"
+                                   placeholder="Ej: Grundfos, Pentair, Hayward...">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Teléfono de contacto</label>
+                            <input type="text" name="telefono" class="form-control rounded-3"
+                                   placeholder="Número donde podemos llamarte..." required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Descripción del problema</label>
+                            <textarea name="descripcion" class="form-control rounded-3" rows="3"
+                                      placeholder="Describe qué está pasando o qué necesitas exactamente..." required></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-map-marker-alt me-1 text-primary"></i>
+                                Dirección del servicio <small class="text-muted">(Solo Guatemala)</small>
+                            </label>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Departamento</label>
+                            <select id="selectDepartamento" class="form-select rounded-3"
+                                    onchange="cargarMunicipios(this.value)">
+                                <option value="Guatemala" selected>Guatemala</option>
+                                <option value="Alta Verapaz">Alta Verapaz</option>
+                                <option value="Baja Verapaz">Baja Verapaz</option>
+                                <option value="Chimaltenango">Chimaltenango</option>
+                                <option value="Chiquimula">Chiquimula</option>
+                                <option value="El Progreso">El Progreso</option>
+                                <option value="Escuintla">Escuintla</option>
+                                <option value="Huehuetenango">Huehuetenango</option>
+                                <option value="Izabal">Izabal</option>
+                                <option value="Jalapa">Jalapa</option>
+                                <option value="Jutiapa">Jutiapa</option>
+                                <option value="Petén">Petén</option>
+                                <option value="Quetzaltenango">Quetzaltenango</option>
+                                <option value="Quiché">Quiché</option>
+                                <option value="Retalhuleu">Retalhuleu</option>
+                                <option value="Sacatepéquez">Sacatepéquez</option>
+                                <option value="San Marcos">San Marcos</option>
+                                <option value="Santa Rosa">Santa Rosa</option>
+                                <option value="Sololá">Sololá</option>
+                                <option value="Suchitepéquez">Suchitepéquez</option>
+                                <option value="Totonicapán">Totonicapán</option>
+                                <option value="Zacapa">Zacapa</option>
+                            </select>
+                            <input type="hidden" name="departamento" id="inputDepartamento" value="Guatemala">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Municipio</label>
+                            <select id="selectMunicipio" class="form-select rounded-3"
+                                    onchange="cargarZonas(this.value)">
+                                <option value="">Seleccionar municipio...</option>
+                            </select>
+                            <input type="hidden" name="municipio" id="inputMunicipio">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Zona <small class="text-muted">(si aplica)</small></label>
+                            <select id="selectZona" class="form-select rounded-3">
+                                <option value="">Seleccionar zona...</option>
+                            </select>
+                            <input type="hidden" name="zona" id="inputZona">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Dirección exacta</label>
+                            <input type="text" name="direccionExacta" class="form-control rounded-3"
+                                   placeholder="Colonia, calle, número de casa..." required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Disponibilidad <small class="text-muted">(opcional)</small></label>
+                            <input type="text" name="observaciones" class="form-control rounded-3"
+                                   placeholder="Ej: Lunes a viernes después de las 3pm...">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-3">
+                        <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const municipios = {
+        'Guatemala': ['Guatemala', 'Mixco', 'Villa Nueva', 'San Miguel Petapa', 'Chinautla', 'San Pedro Ayampuc', 'Amatitlán', 'Santa Catarina Pinula', 'San José Pinula', 'Fraijanes', 'Villa Canales', 'Palencia', 'San Raymundo', 'Chuarrancho', 'San Juan Sacatepéquez', 'San Pedro Sacatepéquez'],
+        'Alta Verapaz': ['Cobán', 'San Cristóbal Verapaz', 'Tactic', 'Tamahú', 'Tucurú', 'Panzós', 'Senahú', 'San Pedro Carchá', 'San Juan Chamelco', 'Lanquín', 'Cahabón', 'Chisec', 'Chahal', 'Fray Bartolomé de las Casas', 'Santa Catalina La Tinta', 'Raxruhá'],
+        'Baja Verapaz': ['Salamá', 'San Miguel Chicaj', 'Rabinal', 'Cubulco', 'Granados', 'Santa Cruz El Chol', 'San Jerónimo', 'Purulhá'],
+        'Chimaltenango': ['Chimaltenango', 'San José Poaquil', 'San Martín Jilotepeque', 'Comalapa', 'Santa Apolonia', 'Tecpán Guatemala', 'Patzún', 'Pochuta', 'Patzicía', 'Santa Cruz Balanyá', 'Acatenango', 'Yepocapa', 'San Andrés Itzapa', 'Parramos', 'Zaragoza', 'El Tejar'],
+        'Chiquimula': ['Chiquimula', 'San José La Arada', 'San Juan Ermita', 'Jocotán', 'Camotán', 'Olopa', 'Esquipulas', 'Concepción Las Minas', 'Quezaltepeque', 'San Jacinto', 'Ipala'],
+        'El Progreso': ['Guastatoya', 'Morazán', 'San Agustín Acasaguastlán', 'San Cristóbal Acasaguastlán', 'El Jícaro', 'Sansare', 'Sanarate', 'San Antonio La Paz'],
+        'Escuintla': ['Escuintla', 'Santa Lucía Cotzumalguapa', 'La Democracia', 'Siquinalá', 'Masagua', 'Tiquisate', 'La Gomera', 'Guanagazapa', 'San José', 'Iztapa', 'Palín', 'San Vicente Pacaya', 'Nueva Concepción'],
+        'Huehuetenango': ['Huehuetenango', 'Chiantla', 'Malacatancito', 'Cuilco', 'Nentón', 'San Pedro Necta', 'Jacaltenango', 'San Pedro Soloma', 'San Ildefonso Ixtahuacán', 'Santa Bárbara', 'La Libertad', 'La Democracia', 'San Miguel Acatán', 'San Rafael La Independencia', 'Todos Santos Cuchumatán', 'San Juan Atitán', 'Santa Eulalia', 'San Mateo Ixtatán', 'Colotenango', 'San Sebastián Huehuetenango', 'Tectitán', 'Concepción Huista', 'San Juan Ixcoy', 'San Antonio Huista', 'San Sebastián Coatán', 'Barillas', 'Aguacatán', 'San Rafael Petzal', 'San Gaspar Ixchil', 'Santiago Chimaltenango', 'Santa Ana Huista'],
+        'Izabal': ['Puerto Barrios', 'Livingston', 'El Estor', 'Morales', 'Los Amates'],
+        'Jalapa': ['Jalapa', 'San Pedro Pinula', 'San Luis Jilotepeque', 'San Manuel Chaparrón', 'San Carlos Alzatate', 'Monjas', 'Mataquescuintla'],
+        'Jutiapa': ['Jutiapa', 'El Progreso', 'Santa Catarina Mita', 'Agua Blanca', 'Asunción Mita', 'Yupiltepeque', 'Atescatempa', 'Jerez', 'El Adelanto', 'Zapotitlán', 'Comapa', 'Jalpatagua', 'Conguaco', 'Moyuta', 'Pasaco', 'San José Acatempa', 'Quesada'],
+        'Petén': ['Flores', 'San José', 'San Benito', 'San Andrés', 'La Libertad', 'San Francisco', 'Santa Ana', 'Dolores', 'San Luis', 'Sayaxché', 'Melchor de Mencos', 'Poptún', 'Las Cruces', 'El Chal'],
+        'Quetzaltenango': ['Quetzaltenango', 'Salcajá', 'Olintepeque', 'San Carlos Sija', 'Sibilia', 'Cabricán', 'Cajolá', 'San Miguel Sigüilá', 'Ostuncalco', 'San Mateo', 'Concepción Chiquirichapa', 'San Martín Sacatepéquez', 'Almolonga', 'Cantel', 'Huitán', 'Zunil', 'Colomba', 'San Francisco La Unión', 'El Palmar', 'Coatepeque', 'Génova', 'Flores Costa Cuca', 'La Esperanza', 'Palestina de Los Altos'],
+        'Quiché': ['Santa Cruz del Quiché', 'Chiché', 'Chinique', 'Zacualpa', 'Chajul', 'Chichicastenango', 'Patzité', 'San Antonio Ilotenango', 'San Pedro Jocopilas', 'Cunén', 'San Juan Cotzal', 'Joyabaj', 'Nebaj', 'San Andrés Sajcabajá', 'Uspantán', 'Sacapulas', 'San Bartolomé Jocotenango', 'Canillá', 'Chicamán', 'Ixcán', 'Pachalum'],
+        'Retalhuleu': ['Retalhuleu', 'San Sebastián', 'Santa Cruz Muluá', 'San Martín Zapotitlán', 'San Felipe', 'San Andrés Villa Seca', 'Champerico', 'Nuevo San Carlos', 'El Asintal'],
+        'Sacatepéquez': ['Antigua Guatemala', 'Jocotenango', 'Pastores', 'Sumpango', 'Santo Domingo Xenacoj', 'Santiago Sacatepéquez', 'San Bartolomé Milpas Altas', 'San Lucas Sacatepéquez', 'Santa Lucía Milpas Altas', 'Magdalena Milpas Altas', 'Santa María de Jesús', 'Ciudad Vieja', 'San Miguel Dueñas', 'Alotenango', 'San Antonio Aguas Calientes', 'Santa Catarina Barahona'],
+        'San Marcos': ['San Marcos', 'San Pedro Sacatepéquez', 'San Antonio Sacatepéquez', 'Comitancillo', 'San Miguel Ixtahuacán', 'Concepción Tutuapa', 'Tacaná', 'Sibinal', 'Tajumulco', 'Tejutla', 'San Rafael Pie de la Cuesta', 'Nuevo Progreso', 'El Tumbador', 'El Rodeo', 'Malacatán', 'Catarina', 'Ayutla', 'Ocós', 'San Pablo', 'El Quetzal', 'La Reforma', 'Pajapita', 'Ixchiguán', 'San José Ojetenam', 'San Cristóbal Cucho', 'Sipacapa', 'Esquipulas Palo Gordo', 'Río Blanco', 'San Lorenzo'],
+        'Santa Rosa': ['Cuilapa', 'Barberena', 'Santa Rosa de Lima', 'Casillas', 'San Rafael Las Flores', 'Oratorio', 'San Juan Tecuaco', 'Chiquimulilla', 'Taxisco', 'Santa María Ixhuatán', 'Guazacapán', 'Santa Cruz Naranjo', 'Pueblo Nuevo Viñas', 'Nueva Santa Rosa'],
+        'Sololá': ['Sololá', 'San José Chacayá', 'Santa María Visitación', 'Santa Lucía Utatlán', 'Nahualá', 'Santa Catarina Ixtahuacán', 'Santa Clara La Laguna', 'Concepción', 'San Andrés Semetabaj', 'Panajachel', 'Santa Catarina Palopó', 'San Antonio Palopó', 'San Lucas Tolimán', 'Santa Cruz La Laguna', 'San Pablo La Laguna', 'San Marcos La Laguna', 'San Juan La Laguna', 'San Pedro La Laguna', 'Santiago Atitlán'],
+        'Suchitepéquez': ['Mazatenango', 'Cuyotenango', 'San Francisco Zapotitlán', 'San Bernardino', 'San José El Ídolo', 'Santo Domingo Suchitepéquez', 'San Lorenzo', 'Samayac', 'San Pablo Jocopilas', 'San Antonio Suchitepéquez', 'San Miguel Panán', 'San Gabriel', 'Chicacao', 'Patulul', 'Santa Bárbara', 'San Juan Bautista', 'Santo Tomás La Unión', 'Zunilito', 'Pueblo Nuevo', 'Río Bravo'],
+        'Totonicapán': ['Totonicapán', 'San Cristóbal Totonicapán', 'San Francisco El Alto', 'San Andrés Xecul', 'Momostenango', 'Santa María Chiquimula', 'Santa Lucía La Reforma', 'San Bartolo'],
+        'Zacapa': ['Zacapa', 'Estanzuela', 'Río Hondo', 'Gualán', 'Teculután', 'Usumatlán', 'Cabañas', 'San Diego', 'La Unión', 'Huité']
+    };
+
+    const zonasGuatemala = ['Zona 1','Zona 2','Zona 3','Zona 4','Zona 5','Zona 6','Zona 7','Zona 8','Zona 9','Zona 10','Zona 11','Zona 12','Zona 13','Zona 14','Zona 15','Zona 16','Zona 17','Zona 18','Zona 19','Zona 21','Zona 24','Zona 25'];
+
+    function cargarMunicipios(departamento) {
+        const selectMunicipio = document.getElementById('selectMunicipio');
+        document.getElementById('inputDepartamento').value = departamento;
+        selectMunicipio.innerHTML = '<option value="">Seleccionar municipio...</option>';
+        document.getElementById('selectZona').innerHTML = '<option value="">Seleccionar zona...</option>';
+        document.getElementById('inputZona').value = '';
+        if (municipios[departamento]) {
+            municipios[departamento].forEach(mun => {
+                const opt = document.createElement('option');
+                opt.value = mun; opt.textContent = mun;
+                selectMunicipio.appendChild(opt);
+            });
+        }
+    }
+
+    function cargarZonas(municipio) {
+        document.getElementById('inputMunicipio').value = municipio;
+        const selectZona = document.getElementById('selectZona');
+        selectZona.innerHTML = '<option value="">Seleccionar zona...</option>';
+        const conZonas = ['Guatemala', 'Mixco', 'Villa Nueva', 'San Miguel Petapa', 'Amatitlán', 'Villa Canales'];
+        if (conZonas.includes(municipio)) {
+            zonasGuatemala.forEach(zona => {
+                const opt = document.createElement('option');
+                opt.value = zona; opt.textContent = zona;
+                selectZona.appendChild(opt);
+            });
+        }
+    }
+
+    document.getElementById('selectZona').addEventListener('change', function() {
+        document.getElementById('inputZona').value = this.value;
+    });
+
+    window.addEventListener('DOMContentLoaded', function() {
+        cargarMunicipios('Guatemala');
+    });
+
+    function mostrarOtro(select) {
+        const campoOtro = document.getElementById('campoOtro');
+        const tituloOtro = document.getElementById('tituloOtro');
+        if (select.value === 'Otro') {
+            campoOtro.style.display = 'block';
+            tituloOtro.required = true;
+        } else {
+            campoOtro.style.display = 'none';
+            tituloOtro.required = false;
+        }
+    }
+
+    document.getElementById('formSolicitar').addEventListener('submit', function(e) {
+        const tipoServicio = document.getElementById('tipoServicio');
+        const tituloOtro = document.getElementById('tituloOtro');
+        const inputTitulo = document.getElementById('inputTitulo');
+
+        if (tipoServicio.value === '') {
+            e.preventDefault();
+            alert('Por favor selecciona el tipo de servicio.');
+            return;
+        }
+
+        if (tipoServicio.value === 'Otro') {
+            if (tituloOtro.value.trim() === '') {
+                e.preventDefault();
+                alert('Por favor especifica el servicio.');
+                return;
+            }
+            inputTitulo.value = tituloOtro.value.trim();
+        } else {
+            inputTitulo.value = tipoServicio.value;
+        }
+    });
+</script>
+</body>
+</html>

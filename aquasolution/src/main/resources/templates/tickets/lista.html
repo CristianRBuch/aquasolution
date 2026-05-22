@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aqua Solution - Tickets</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root { --azul-principal: #1e4d8c; --azul-oscuro: #1a3d6e; }
+    body { background-color: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+    .sidebar { background: linear-gradient(180deg, var(--azul-oscuro) 0%, var(--azul-principal) 100%); min-height: 100vh; width: 260px; position: fixed; top: 0; left: 0; z-index: 100; display: flex; flex-direction: column; }
+    .sidebar-brand { padding: 22px 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+    .sidebar-brand img { max-width: 150px; }
+    .sidebar-brand p { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 10px 12px; }
+    .sidebar-nav .nav-section { font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 12px 8px 4px; margin-top: 4px; }
+    .sidebar-nav .nav-link { color: rgba(255,255,255,0.75); padding: 10px 12px; border-radius: 10px; margin: 1px 0; transition: all 0.25s; font-size: 0.88rem; display: flex; align-items: center; border-left: 3px solid transparent; }
+    .sidebar-nav .nav-link:hover { background: rgba(255,255,255,0.1); color: white; border-left-color: rgba(255,255,255,0.4); }
+    .sidebar-nav .nav-link.active { background: rgba(255,255,255,0.18); color: white; font-weight: 600; border-left-color: white; }
+    .sidebar-nav .nav-link i { width: 18px; text-align: center; }
+    .sidebar-nav .nav-link.text-danger { color: #fca5a5 !important; }
+    .sidebar-nav .nav-link.text-danger:hover { background: rgba(220,53,69,0.15); color: #ff6b6b !important; border-left-color: #ff6b6b; }
+    .sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .main-content { margin-left: 260px; padding: 30px; }
+    .topbar { background: white; padding: 15px 30px; margin-left: 260px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 99; }
+    .card-custom { border-radius: 15px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .user-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--azul-principal), var(--azul-oscuro)); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .badge-abierto { background-color: #0077b6; }
+    .badge-proceso { background-color: #f77f00; }
+    .badge-resuelto { background-color: #2dc653; }
+    .badge-cerrado { background-color: #6c757d; }
+    .badge-baja { background-color: #48cae4; color: #023e8a; }
+    .badge-media { background-color: #f77f00; }
+    .badge-alta { background-color: #e63946; }
+    .badge-urgente { background-color: #9b2226; }
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <img th:src="@{/img/logo_blanco.png}" alt="Aqua Solution">
+    <p class="text-white-50 mt-1 mb-0">Sistema de Gestión</p>
+  </div>
+  <nav class="sidebar-nav">
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a class="nav-link" th:href="@{/dashboard}">
+          <i class="fas fa-home me-2"></i>
+          <span sec:authorize="hasAuthority('ADMIN')">Dashboard</span>
+          <span sec:authorize="hasAuthority('TECNICO')">Mi Panel</span>
+        </a>
+      </li>
+      <li sec:authorize="hasAuthority('ADMIN')">
+        <p class="nav-section">Gestión</p>
+      </li>
+      <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+        <a class="nav-link" th:href="@{/admin/usuarios}">
+          <i class="fas fa-users me-2"></i> Usuarios
+        </a>
+      </li>
+      <li>
+        <p class="nav-section">Operaciones</p>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" th:href="@{/tickets}">
+          <i class="fas fa-ticket-alt me-2"></i>
+          <span sec:authorize="hasAuthority('ADMIN')">Tickets</span>
+          <span sec:authorize="hasAuthority('TECNICO')">Mis Tickets</span>
+        </a>
+      </li>
+      <li class="nav-item" sec:authorize="hasAuthority('ADMIN') or hasAuthority('TECNICO')">
+        <a class="nav-link" th:href="@{/piscinas}">
+          <i class="fas fa-swimming-pool me-2"></i> Piscinas
+        </a>
+      </li>
+      <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+        <a class="nav-link" th:href="@{/cotizaciones}">
+          <i class="fas fa-file-invoice-dollar me-2"></i> Cotizaciones
+        </a>
+      </li>
+      <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+        <a class="nav-link" th:href="@{/productos}">
+          <i class="fas fa-box me-2"></i> Productos
+        </a>
+      </li>
+      <li>
+        <p class="nav-section">Reportes</p>
+      </li>
+      <li class="nav-item" sec:authorize="hasAuthority('ADMIN') or hasAuthority('TECNICO')">
+        <a class="nav-link" th:href="@{/reportes}">
+          <i class="fas fa-clipboard-list me-2"></i>
+          <span sec:authorize="hasAuthority('ADMIN')">Reportes</span>
+          <span sec:authorize="hasAuthority('TECNICO')">Mis Reportes</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" th:href="@{/historial}">
+          <i class="fas fa-history me-2"></i> Historial Clientes
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <div class="sidebar-footer">
+    <form th:action="@{/logout}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="nav-link text-danger border-0 bg-transparent w-100 text-start">
+        <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="topbar d-flex justify-content-between align-items-center">
+  <h5 class="mb-0 fw-bold text-dark">
+    <i class="fas fa-ticket-alt me-2 text-primary"></i>
+    <span sec:authorize="hasAuthority('TECNICO')">Mis Tickets</span>
+    <span sec:authorize="hasAuthority('ADMIN')">Gestión de Tickets</span>
+  </h5>
+  <div class="d-flex align-items-center gap-3">
+    <div class="user-avatar"><i class="fas fa-user text-white"></i></div>
+    <div><span class="fw-semibold d-block" sec:authentication="name">Usuario</span></div>
+  </div>
+</div>
+
+<div class="main-content">
+  <div th:if="${exito}" class="alert alert-success alert-dismissible fade show rounded-3">
+    <i class="fas fa-check-circle me-2"></i><span th:text="${exito}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3">
+    <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h6 class="text-muted mb-0">Registro y seguimiento de servicios</h6>
+    <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#modalNuevoTicket">
+      <i class="fas fa-plus me-2"></i>Nuevo Ticket
+    </button>
+  </div>
+
+  <div class="card card-custom">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead style="background-color: #f8f9fa;">
+        <tr>
+          <th class="px-4 py-3">#</th>
+          <th class="py-3">Título</th>
+          <th class="py-3">Tipo</th>
+          <th class="py-3">Cliente</th>
+          <th class="py-3">Técnico</th>
+          <th class="py-3">Fecha Visita</th>
+          <th class="py-3">Prioridad</th>
+          <th class="py-3">Estado</th>
+          <th class="py-3">Fecha</th>
+          <th class="py-3">Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="ticket : ${tickets}">
+          <td class="px-4 py-3 fw-semibold" th:text="${ticket.id}"></td>
+          <td class="py-3" th:text="${ticket.titulo}"></td>
+          <td class="py-3">
+            <span th:if="${ticket.tipoServicio != null}" class="badge bg-secondary" th:text="${ticket.tipoServicio}"></span>
+            <span th:if="${ticket.tipoServicio == null}" class="text-muted small">General</span>
+          </td>
+          <td class="py-3" th:text="${ticket.cliente.nombreCompleto}"></td>
+          <td class="py-3">
+            <span th:if="${ticket.tecnico != null}" th:text="${ticket.tecnico.nombreCompleto}"></span>
+            <span th:if="${ticket.tecnico == null}" class="text-muted">Sin asignar</span>
+          </td>
+          <td class="py-3">
+            <span th:if="${ticket.fechaVisita != null}"
+                  class="badge bg-info text-dark"
+                  th:text="${#temporals.format(ticket.fechaVisita, 'dd/MM/yyyy')}">
+            </span>
+            <span th:if="${ticket.fechaVisita == null}" class="text-muted small">Sin programar</span>
+          </td>
+          <td class="py-3">
+            <span th:if="${ticket.prioridad.name() == 'BAJA'}" class="badge badge-baja">BAJA</span>
+            <span th:if="${ticket.prioridad.name() == 'MEDIA'}" class="badge badge-media">MEDIA</span>
+            <span th:if="${ticket.prioridad.name() == 'ALTA'}" class="badge badge-alta">ALTA</span>
+            <span th:if="${ticket.prioridad.name() == 'URGENTE'}" class="badge badge-urgente">URGENTE</span>
+          </td>
+          <td class="py-3">
+            <span th:if="${ticket.estado.name() == 'ABIERTO'}" class="badge badge-abierto">ABIERTO</span>
+            <span th:if="${ticket.estado.name() == 'EN_PROCESO'}" class="badge badge-proceso">EN PROCESO</span>
+            <span th:if="${ticket.estado.name() == 'RESUELTO'}" class="badge badge-resuelto">RESUELTO</span>
+            <span th:if="${ticket.estado.name() == 'CERRADO'}" class="badge badge-cerrado">CERRADO</span>
+          </td>
+          <td class="py-3 small" th:text="${#temporals.format(ticket.fechaCreacion, 'dd/MM/yyyy')}"></td>
+          <td class="py-3">
+            <button class="btn btn-sm btn-outline-info rounded-3 me-1" data-bs-toggle="modal" th:data-bs-target="'#modalDetalle' + ${ticket.id}" title="Ver detalle"><i class="fas fa-eye"></i></button>
+            <button sec:authorize="hasAuthority('ADMIN')" class="btn btn-sm btn-outline-primary rounded-3 me-1" data-bs-toggle="modal" th:data-bs-target="'#modalAsignar' + ${ticket.id}"><i class="fas fa-user-plus"></i></button>
+            <button class="btn btn-sm btn-outline-warning rounded-3 me-1" data-bs-toggle="modal" th:data-bs-target="'#modalEstado' + ${ticket.id}"><i class="fas fa-exchange-alt"></i></button>
+            <a sec:authorize="hasAuthority('ADMIN')" th:href="@{/tickets/eliminar/{id}(id=${ticket.id})}" class="btn btn-sm btn-outline-danger rounded-3" onclick="return confirm('¿Eliminar este ticket?')"><i class="fas fa-trash"></i></a>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(tickets)}">
+          <td colspan="10" class="text-center py-4 text-muted">No hay tickets registrados.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div th:each="ticket : ${tickets}">
+
+    <!-- Modal Ver Detalle Ticket -->
+    <div class="modal fade" th:id="'modalDetalle' + ${ticket.id}" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+          <div class="modal-header" style="background: linear-gradient(135deg, #1a3d6e, #1e4d8c);">
+            <h5 class="modal-title text-white">
+              <i class="fas fa-ticket-alt me-2"></i>
+              Ticket #<span th:text="${ticket.id}"></span> — <span th:text="${ticket.titulo}"></span>
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+
+              <!-- Fecha de visita destacada -->
+              <div class="col-12">
+                <div th:if="${ticket.fechaVisita != null}"
+                     class="alert mb-0 d-flex align-items-center gap-3"
+                     style="background:#dbeafe;border:1px solid #93c5fd;border-radius:12px;">
+                  <i class="fas fa-calendar-check fa-2x" style="color:#1d4ed8;"></i>
+                  <div>
+                    <strong style="color:#1d4ed8;">Fecha de Visita Programada</strong>
+                    <p class="mb-0 fw-bold fs-5" style="color:#1e4d8c;"
+                       th:text="${#temporals.format(ticket.fechaVisita, 'dd/MM/yyyy')}"></p>
+                  </div>
+                </div>
+                <div th:if="${ticket.fechaVisita == null}"
+                     class="alert mb-0"
+                     style="background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;">
+                  <i class="fas fa-clock me-2" style="color:#d97706;"></i>
+                  <span style="color:#92400e;">Visita aún no programada</span>
+                </div>
+              </div>
+
+              <!-- Dirección -->
+              <div class="col-12">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-map-marker-alt me-1 text-danger"></i>DIRECCIÓN
+                </label>
+                <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e5e7eb;">
+                  <span th:if="${ticket.direccion != null}" th:text="${ticket.direccion}" class="fw-semibold"></span>
+                  <span th:if="${ticket.direccion == null}" class="text-muted fst-italic">Sin dirección registrada</span>
+                </div>
+              </div>
+
+              <!-- Cliente y Técnico -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-user me-1 text-primary"></i>CLIENTE
+                </label>
+                <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e5e7eb;">
+                  <span th:text="${ticket.cliente.nombreCompleto}" class="fw-semibold"></span>
+                  <br>
+                  <small class="text-muted" th:text="${ticket.cliente.telefono}"></small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-hard-hat me-1 text-warning"></i>TÉCNICO ASIGNADO
+                </label>
+                <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e5e7eb;">
+                  <span th:if="${ticket.tecnico != null}" th:text="${ticket.tecnico.nombreCompleto}" class="fw-semibold"></span>
+                  <span th:if="${ticket.tecnico == null}" class="text-muted fst-italic">Sin asignar</span>
+                </div>
+              </div>
+
+              <!-- Tipo y Prioridad -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-tools me-1"></i>TIPO DE SERVICIO
+                </label>
+                <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e5e7eb;">
+                  <span th:if="${ticket.tipoServicio != null}" class="badge bg-secondary" th:text="${ticket.tipoServicio}"></span>
+                  <span th:if="${ticket.tipoServicio == null}" class="text-muted fst-italic">General</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-exclamation-triangle me-1"></i>PRIORIDAD
+                </label>
+                <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e5e7eb;">
+                  <span th:if="${ticket.prioridad.name() == 'URGENTE'}" class="badge badge-urgente">URGENTE</span>
+                  <span th:if="${ticket.prioridad.name() == 'ALTA'}" class="badge badge-alta">ALTA</span>
+                  <span th:if="${ticket.prioridad.name() == 'MEDIA'}" class="badge badge-media">MEDIA</span>
+                  <span th:if="${ticket.prioridad.name() == 'BAJA'}" class="badge badge-baja">BAJA</span>
+                </div>
+              </div>
+
+              <!-- Piscina asociada -->
+              <div class="col-12" th:if="${ticket.piscina != null}">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-swimming-pool me-1 text-info"></i>PISCINA ASOCIADA
+                </label>
+                <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e5e7eb;">
+                  <span th:text="${ticket.piscina.nombre}" class="fw-semibold"></span>
+                  — <span th:text="${ticket.piscina.volumen + ' m³'}"></span>
+                </div>
+              </div>
+
+              <!-- Descripción -->
+              <div class="col-12">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-clipboard me-1"></i>DESCRIPCIÓN DEL TRABAJO
+                </label>
+                <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e5e7eb;min-height:80px;">
+                  <span th:text="${ticket.descripcion}"></span>
+                </div>
+              </div>
+
+              <!-- Observaciones -->
+              <div class="col-12" th:if="${ticket.observaciones != null}">
+                <label class="form-label fw-semibold text-muted small">
+                  <i class="fas fa-sticky-note me-1"></i>OBSERVACIONES
+                </label>
+                <div class="p-3 rounded-3" style="background:#fffbeb;border:1px solid #fcd34d;">
+                  <span th:text="${ticket.observaciones}"></span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Asignar Técnico MEJORADO -->
+    <div sec:authorize="hasAuthority('ADMIN')" class="modal fade" th:id="'modalAsignar' + ${ticket.id}" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+          <div class="modal-header" style="background: linear-gradient(135deg, #1a3d6e, #1e4d8c);">
+            <h5 class="modal-title text-white"><i class="fas fa-user-plus me-2"></i>Asignar Técnico</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="text-muted mb-1">Ticket: <strong th:text="${ticket.titulo}"></strong></p>
+            <p class="text-muted mb-3">
+              <i class="fas fa-map-marker-alt me-1 text-danger"></i>
+              <span th:if="${ticket.direccion != null}" th:text="${ticket.direccion}"></span>
+              <span th:if="${ticket.direccion == null}" class="text-warning fst-italic">Sin dirección registrada</span>
+            </p>
+            <form th:action="@{/tickets/asignar/{id}(id=${ticket.id})}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Seleccionar Técnico</label>
+                <select name="tecnicoId" class="form-select rounded-3" required>
+                  <option value="">Seleccionar...</option>
+                  <option th:each="tecnico : ${tecnicos}"
+                          th:value="${tecnico.id}"
+                          th:text="${tecnico.nombreCompleto}"
+                          th:selected="${ticket.tecnico != null && ticket.tecnico.id == tecnico.id}">
+                  </option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Fecha de Visita</label>
+                <input type="date" name="fechaVisita" class="form-control rounded-3"
+                       th:value="${ticket.fechaVisita != null ? #temporals.format(ticket.fechaVisita, 'yyyy-MM-dd') : ''}">
+              </div>
+              <button type="submit" class="btn btn-primary rounded-3 w-100">
+                <i class="fas fa-calendar-check me-2"></i>Asignar y Programar Visita
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cambiar Estado -->
+    <div class="modal fade" th:id="'modalEstado' + ${ticket.id}" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+          <div class="modal-header" style="background: linear-gradient(135deg, #1a3d6e, #1e4d8c);">
+            <h5 class="modal-title text-white"><i class="fas fa-exchange-alt me-2"></i>Cambiar Estado</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="text-muted">Ticket: <strong th:text="${ticket.titulo}"></strong></p>
+            <form th:action="@{/tickets/estado/{id}(id=${ticket.id})}" method="get">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Nuevo Estado</label>
+                <select name="estado" class="form-select rounded-3" required>
+                  <option value="ABIERTO">Abierto</option>
+                  <option value="EN_PROCESO">En Proceso</option>
+                  <option value="RESUELTO">Resuelto</option>
+                  <option value="CERRADO">Cerrado</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-warning rounded-3 w-100">
+                <i class="fas fa-save me-2"></i>Actualizar Estado
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Nuevo Ticket -->
+<div class="modal fade" id="modalNuevoTicket" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content rounded-4">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1a3d6e, #1e4d8c);">
+        <h5 class="modal-title text-white"><i class="fas fa-ticket-alt me-2"></i>Nuevo Ticket</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form th:action="@{/tickets/guardar}" method="post">
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Título</label>
+              <input type="text" name="titulo" class="form-control rounded-3" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Prioridad</label>
+              <select name="prioridad" class="form-select rounded-3" required>
+                <option value="BAJA">Baja</option>
+                <option value="MEDIA">Media</option>
+                <option value="ALTA">Alta</option>
+                <option value="URGENTE" sec:authorize="hasAuthority('ADMIN') or hasAuthority('TECNICO')">Urgente</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Tipo de Servicio</label>
+              <select name="tipoServicio" class="form-select rounded-3" onchange="mostrarPiscina(this.value)" required>
+                <option value="">Seleccionar...</option>
+                <option value="PISCINA_JACUZZI">🏊 Piscina / Jacuzzi</option>
+                <option value="HIDRONEUMATICO">🏢 Hidroneumático</option>
+                <option value="POZO">🔩 Pozo</option>
+                <option value="BOMBA_GENERAL">💧 Bomba General</option>
+                <option value="RIEGO">🌱 Sistema de Riego</option>
+                <option value="OTRO">📝 Otro</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Descripción</label>
+              <textarea name="descripcion" class="form-control rounded-3" rows="3" required></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Cliente</label>
+              <select name="clienteId" class="form-select rounded-3" required>
+                <option value="">Seleccionar cliente...</option>
+                <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nombreCompleto}"></option>
+              </select>
+            </div>
+            <div class="col-md-6" sec:authorize="hasAuthority('ADMIN')">
+              <label class="form-label fw-semibold">Asignar Técnico</label>
+              <select name="tecnicoId" class="form-select rounded-3">
+                <option value="">Sin asignar</option>
+                <option th:each="tecnico : ${tecnicos}" th:value="${tecnico.id}" th:text="${tecnico.nombreCompleto}"></option>
+              </select>
+            </div>
+            <div class="col-md-6" id="campoServicio" style="display:none">
+              <label class="form-label fw-semibold">Piscina asociada</label>
+              <select name="piscinaId" class="form-select rounded-3" id="selectPiscina">
+                <option value="">Seleccionar piscina...</option>
+                <option th:each="piscina : ${piscinas}" th:value="${piscina.id}" th:attr="data-cliente=${piscina.cliente.id}" th:text="${piscina.nombre}"></option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Observaciones</label>
+              <textarea name="observaciones" class="form-control rounded-3" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary rounded-3"><i class="fas fa-save me-2"></i>Crear Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function mostrarPiscina(tipo) {
+    const campo = document.getElementById('campoServicio');
+    campo.style.display = (tipo === 'PISCINA_JACUZZI') ? 'block' : 'none';
+    if (tipo === 'PISCINA_JACUZZI') filtrarPiscinas();
+  }
+  function filtrarPiscinas() {
+    const clienteId = document.querySelector('#modalNuevoTicket select[name="clienteId"]').value;
+    const selectPiscina = document.getElementById('selectPiscina');
+    if (!selectPiscina) return;
+    Array.from(selectPiscina.options).forEach(option => {
+      if (option.value === '') { option.style.display = 'block'; }
+      else { option.style.display = (option.dataset.cliente === clienteId) ? 'block' : 'none'; }
+    });
+    selectPiscina.value = '';
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    const clienteSelect = document.querySelector('#modalNuevoTicket select[name="clienteId"]');
+    if (clienteSelect) clienteSelect.addEventListener('change', filtrarPiscinas);
+  });
+</script>
+</body>
+</html>

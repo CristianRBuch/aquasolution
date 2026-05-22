@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqua Solution - Registro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --azul-principal: #1e4d8c; --azul-oscuro: #1a3d6e; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { min-height: 100vh; display: flex; font-family: 'Segoe UI', sans-serif; }
+
+        .panel-izquierdo {
+            width: 45%;
+            background: linear-gradient(160deg, var(--azul-oscuro) 0%, var(--azul-principal) 60%, #2563b0 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 50px;
+            position: relative;
+            overflow: hidden;
+        }
+        .panel-izquierdo::before {
+            content: '';
+            position: absolute;
+            top: -80px; right: -80px;
+            width: 300px; height: 300px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .panel-izquierdo::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; left: -60px;
+            width: 350px; height: 350px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .panel-izquierdo .logo-img {
+            max-width: 260px;
+            margin-bottom: 25px;
+            filter: brightness(0) invert(1);
+            position: relative; z-index: 1;
+        }
+        .separador {
+            width: 60px; height: 3px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            position: relative; z-index: 1;
+        }
+        .tagline {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 0;
+            position: relative; z-index: 1;
+        }
+        .panel-derecho {
+            width: 55%;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 60px;
+            overflow-y: auto;
+        }
+        .form-box { width: 100%; max-width: 520px; }
+        .form-box h2 { font-size: 1.7rem; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+        .form-box .subtitulo { color: #6b7280; margin-bottom: 30px; font-size: 0.95rem; }
+        .form-label { font-weight: 600; color: #374151; font-size: 0.9rem; margin-bottom: 6px; }
+        .input-group-text {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+            color: #9ca3af;
+        }
+        .form-control {
+            border: 2px solid #e5e7eb;
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            padding: 11px 15px;
+            font-size: 0.9rem;
+            background: white;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus { border-color: var(--azul-principal); box-shadow: none; }
+        .input-group:focus-within .input-group-text { border-color: var(--azul-principal); }
+        .form-control.is-invalid { border-color: #dc3545; border-left: none; }
+        .form-control.is-valid { border-color: #28a745; border-left: none; }
+        .btn-registro {
+            background: linear-gradient(135deg, var(--azul-principal), var(--azul-oscuro));
+            border: none;
+            border-radius: 10px;
+            padding: 13px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(30, 77, 140, 0.3);
+        }
+        .btn-registro:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30, 77, 140, 0.4); opacity: 0.95; }
+        .password-strength {
+            height: 4px; border-radius: 2px;
+            margin-top: 6px; transition: all 0.3s; background: #e9ecef;
+        }
+        .divider {
+            display: flex; align-items: center; gap: 12px;
+            margin: 20px 0; color: #9ca3af; font-size: 0.85rem;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+        .link-login {
+            display: block; text-align: center;
+            color: var(--azul-principal); font-weight: 600;
+            text-decoration: none; font-size: 0.95rem;
+            padding: 11px;
+            border: 2px solid var(--azul-principal);
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .link-login:hover { background: var(--azul-principal); color: white; }
+        .copyright { margin-top: 25px; color: #9ca3af; font-size: 0.8rem; text-align: center; }
+
+        @media (max-width: 768px) {
+            .panel-izquierdo { display: none; }
+            .panel-derecho { width: 100%; padding: 40px 25px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="panel-izquierdo">
+    <img th:src="@{/img/logo_blanco.png}" alt="Aqua Solution" class="logo-img">
+    <div class="separador"></div>
+    <p class="tagline">Sistema de Gestión Integral</p>
+</div>
+
+<div class="panel-derecho">
+    <div class="form-box">
+        <h2>Crear Cuenta</h2>
+        <p class="subtitulo">Regístrate para acceder al portal de clientes</p>
+
+        <div th:if="${error}" class="alert alert-danger rounded-3 mb-4" style="font-size:0.9rem;">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+        </div>
+
+        <form id="formRegistro" th:action="@{/registro}" method="post" novalidate>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre Completo</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                        <input type="text" name="nombreCompleto" id="nombreCompleto"
+                               class="form-control" required minlength="5"
+                               placeholder="Tu nombre completo">
+                    </div>
+                    <div class="invalid-feedback d-block" id="err-nombre" style="display:none!important;font-size:0.8rem;"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Usuario</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" name="username" id="username"
+                               class="form-control" required minlength="4"
+                               placeholder="Nombre de usuario">
+                    </div>
+                    <div class="invalid-feedback d-block" id="err-username" style="display:none!important;font-size:0.8rem;"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Correo Electrónico</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <input type="email" name="email" id="email"
+                               class="form-control" required
+                               placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="invalid-feedback d-block" id="err-email" style="display:none!important;font-size:0.8rem;"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Teléfono</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                        <input type="tel" name="telefono" id="telefono"
+                               class="form-control" required pattern="[0-9]{8}"
+                               maxlength="8" placeholder="12345678">
+                    </div>
+                    <div class="invalid-feedback d-block" id="err-telefono" style="display:none!important;font-size:0.8rem;"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="password" id="password"
+                               class="form-control" required minlength="6"
+                               placeholder="Mínimo 6 caracteres"
+                               oninput="verificarFuerza(this.value)">
+                    </div>
+                    <div class="password-strength" id="strengthBar"></div>
+                    <small id="strengthText" class="text-muted"></small>
+                    <div class="invalid-feedback d-block" id="err-password" style="display:none!important;font-size:0.8rem;"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Confirmar Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="confirmarPassword"
+                               class="form-control" required
+                               placeholder="Repite tu contraseña">
+                    </div>
+                    <div class="invalid-feedback d-block" id="err-confirmar" style="display:none!important;font-size:0.8rem;"></div>
+                </div>
+                <div class="col-12 mt-2">
+                    <button type="submit" class="btn btn-registro w-100 text-white">
+                        <i class="fas fa-user-plus me-2"></i>Registrarme
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="divider">o</div>
+        <a th:href="@{/login}" class="link-login">
+            <i class="fas fa-sign-in-alt me-2"></i>Ya tengo cuenta — Iniciar Sesión
+        </a>
+        <p class="copyright">© 2026 Aqua Solution. Todos los derechos reservados.</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function verificarFuerza(password) {
+        const bar = document.getElementById('strengthBar');
+        const text = document.getElementById('strengthText');
+        let fuerza = 0;
+        if (password.length >= 6) fuerza++;
+        if (password.length >= 10) fuerza++;
+        if (/[A-Z]/.test(password)) fuerza++;
+        if (/[0-9]/.test(password)) fuerza++;
+        if (/[^A-Za-z0-9]/.test(password)) fuerza++;
+        const colores = ['#dc3545', '#fd7e14', '#ffc107', '#28a745', '#1e4d8c'];
+        const textos = ['Muy débil', 'Débil', 'Regular', 'Fuerte', 'Muy fuerte'];
+        const porcentajes = ['20%', '40%', '60%', '80%', '100%'];
+        bar.style.backgroundColor = fuerza > 0 ? colores[fuerza - 1] : '#e9ecef';
+        bar.style.width = fuerza > 0 ? porcentajes[fuerza - 1] : '0%';
+        text.textContent = fuerza > 0 ? textos[fuerza - 1] : '';
+        text.style.color = fuerza > 0 ? colores[fuerza - 1] : '#6c757d';
+    }
+
+    function mostrarError(id, mensaje) {
+        const el = document.getElementById(id);
+        el.textContent = mensaje;
+        el.style.setProperty('display', 'block', 'important');
+    }
+    function limpiarError(id) {
+        document.getElementById(id).style.setProperty('display', 'none', 'important');
+    }
+
+    document.getElementById('formRegistro').addEventListener('submit', function(e) {
+        e.preventDefault();
+        let valido = true;
+
+        const nombre = document.getElementById('nombreCompleto');
+        if (nombre.value.trim().length < 5) {
+            nombre.classList.add('is-invalid'); mostrarError('err-nombre', 'Mínimo 5 caracteres.'); valido = false;
+        } else { nombre.classList.remove('is-invalid'); nombre.classList.add('is-valid'); limpiarError('err-nombre'); }
+
+        const username = document.getElementById('username');
+        if (username.value.trim().length < 4) {
+            username.classList.add('is-invalid'); mostrarError('err-username', 'Mínimo 4 caracteres.'); valido = false;
+        } else { username.classList.remove('is-invalid'); username.classList.add('is-valid'); limpiarError('err-username'); }
+
+        const email = document.getElementById('email');
+        if (!email.checkValidity()) {
+            email.classList.add('is-invalid'); mostrarError('err-email', 'Correo electrónico inválido.'); valido = false;
+        } else { email.classList.remove('is-invalid'); email.classList.add('is-valid'); limpiarError('err-email'); }
+
+        const telefono = document.getElementById('telefono');
+        if (!/^[0-9]{8}$/.test(telefono.value.trim())) {
+            telefono.classList.add('is-invalid'); mostrarError('err-telefono', 'Ingresa 8 dígitos numéricos.'); valido = false;
+        } else { telefono.classList.remove('is-invalid'); telefono.classList.add('is-valid'); limpiarError('err-telefono'); }
+
+        const password = document.getElementById('password');
+        if (password.value.length < 6) {
+            password.classList.add('is-invalid'); mostrarError('err-password', 'Mínimo 6 caracteres.'); valido = false;
+        } else { password.classList.remove('is-invalid'); password.classList.add('is-valid'); limpiarError('err-password'); }
+
+        const confirmar = document.getElementById('confirmarPassword');
+        if (password.value !== confirmar.value) {
+            confirmar.classList.add('is-invalid'); mostrarError('err-confirmar', 'Las contraseñas no coinciden.'); valido = false;
+        } else { confirmar.classList.remove('is-invalid'); confirmar.classList.add('is-valid'); limpiarError('err-confirmar'); }
+
+        if (valido) this.submit();
+    });
+</script>
+</body>
+</html>

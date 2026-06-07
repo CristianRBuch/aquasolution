@@ -16,12 +16,15 @@ import java.util.Optional;
 public class ReporteServicioService {
 
     private final ReporteServicioRepository reporteRepository;
+    private final AuditoriaService auditoriaService;
 
-    public ReporteServicioService(ReporteServicioRepository reporteRepository) {
+    public ReporteServicioService(ReporteServicioRepository reporteRepository, AuditoriaService auditoriaService) {
         this.reporteRepository = reporteRepository;
+        this.auditoriaService = auditoriaService;
     }
 
-    public ReporteServicio guardar(ReporteServicio reporte) {
+    public ReporteServicio guardar(ReporteServicio reporte, String usuarioActual, String rolActual) {
+        boolean esNuevo = (reporte.getId() == null);
         if (reporte.getNumeroReporte() == null) {
             long count = reporteRepository.count() + 1;
             reporte.setNumeroReporte(String.format("%06d", count));
@@ -31,7 +34,21 @@ public class ReporteServicioService {
                 material.setReporte(reporte);
             }
         }
-        return reporteRepository.save(reporte);
+        ReporteServicio guardado = reporteRepository.save(reporte);
+        if (esNuevo) {
+            auditoriaService.registrar(usuarioActual, rolActual, "CREATE", "Reportes",
+                    "Se creó el reporte #" + guardado.getNumeroReporte()
+                            + " - Tipo: " + guardado.getTipoServicio().name()
+                            + " - Cliente: " + guardado.getCliente().getNombreCompleto());
+        } else {
+            auditoriaService.registrar(usuarioActual, rolActual, "UPDATE", "Reportes",
+                    "Se editó el reporte #" + guardado.getNumeroReporte());
+        }
+        return guardado;
+    }
+
+    public ReporteServicio guardar(ReporteServicio reporte) {
+        return guardar(reporte, "Sistema", "SISTEMA");
     }
 
     public List<ReporteServicio> obtenerTodos() {
@@ -50,8 +67,17 @@ public class ReporteServicioService {
         return reporteRepository.findByTecnico(tecnico);
     }
 
-    public void eliminar(Long id) {
+    public void eliminar(Long id, String usuarioActual, String rolActual) {
+        reporteRepository.findById(id).ifPresent(r ->
+                auditoriaService.registrar(usuarioActual, rolActual, "DELETE", "Reportes",
+                        "Se eliminó el reporte #" + r.getNumeroReporte()
+                                + " - Cliente: " + r.getCliente().getNombreCompleto())
+        );
         reporteRepository.deleteById(id);
+    }
+
+    public void eliminar(Long id) {
+        eliminar(id, "Sistema", "SISTEMA");
     }
 
     public byte[] generarPDF(Long id) throws Exception {
@@ -74,7 +100,6 @@ public class ReporteServicioService {
         Font fSubtitulo = new Font(Font.FontFamily.HELVETICA, 9, Font.NORMAL, BaseColor.WHITE);
         Font fPie = new Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, BaseColor.GRAY);
 
-        // HEADER
         PdfPTable header = new PdfPTable(2);
         header.setWidthPercentage(100);
         header.setWidths(new float[]{3, 2});
@@ -102,7 +127,6 @@ public class ReporteServicioService {
         doc.add(header);
         doc.add(Chunk.NEWLINE);
 
-        // INFO CLIENTE Y FECHA
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         PdfPTable infoTable = new PdfPTable(2);
         infoTable.setWidthPercentage(100);
@@ -135,7 +159,6 @@ public class ReporteServicioService {
         doc.add(infoTable);
         doc.add(Chunk.NEWLINE);
 
-        // DATOS DEL EQUIPO según tipo
         PdfPTable equipoTable = new PdfPTable(2);
         equipoTable.setWidthPercentage(100);
 
@@ -183,7 +206,6 @@ public class ReporteServicioService {
         doc.add(equipoTable);
         doc.add(Chunk.NEWLINE);
 
-        // MATERIALES UTILIZADOS
         PdfPTable matTable = new PdfPTable(3);
         matTable.setWidthPercentage(100);
         matTable.setWidths(new float[]{1.5f, 5, 3});
@@ -234,7 +256,6 @@ public class ReporteServicioService {
         doc.add(matTable);
         doc.add(Chunk.NEWLINE);
 
-        // TRABAJO REALIZADO
         if (r.getTrabajoRealizado() != null && !r.getTrabajoRealizado().isEmpty()) {
             PdfPTable trabajoTable = new PdfPTable(1);
             trabajoTable.setWidthPercentage(100);
@@ -252,7 +273,6 @@ public class ReporteServicioService {
             doc.add(Chunk.NEWLINE);
         }
 
-        // OBSERVACIONES Y PRÓXIMA VISITA
         PdfPTable obsTable = new PdfPTable(2);
         obsTable.setWidthPercentage(100);
         PdfPCell obsHeader = new PdfPCell(new Phrase("OBSERVACIONES", fBlanco));
@@ -282,7 +302,54 @@ public class ReporteServicioService {
         doc.add(Chunk.NEWLINE);
         doc.add(Chunk.NEWLINE);
 
-        // FIRMAS
+        if (r.getFoto1() != null || r.getFoto2() != null || r.getFoto3() != null) {
+            PdfPTable fotosHeaderTable = new PdfPTable(1);
+            fotosHeaderTable.setWidthPercentage(100);
+            PdfPCell fotosHeader = new PdfPCell(new Phrase("EVIDENCIA FOTOGRAFICA", fBlanco));
+            fotosHeader.setBackgroundColor(azul);
+            fotosHeader.setPadding(7);
+            fotosHeader.setBorder(Rectangle.BOX);
+            fotosHeaderTable.addCell(fotosHeader);
+            doc.add(fotosHeaderTable);
+
+            String uploadDir = System.getProperty("user.dir") + "/uploads/reportes/";
+            int fotosCount = (r.getFoto1() != null ? 1 : 0) +
+                    (r.getFoto2() != null ? 1 : 0) +
+                    (r.getFoto3() != null ? 1 : 0);
+
+            PdfPTable fotosTable = new PdfPTable(fotosCount);
+            fotosTable.setWidthPercentage(100);
+            fotosTable.setSpacingBefore(5);
+
+            String[] fotos = {r.getFoto1(), r.getFoto2(), r.getFoto3()};
+            String[] etiquetas = {"Antes del tratamiento", "Despues del tratamiento", "Equipo / Instalacion"};
+
+            for (int i = 0; i < fotos.length; i++) {
+                if (fotos[i] != null) {
+                    try {
+                        java.io.File fotoFile = new java.io.File(uploadDir + fotos[i]);
+                        if (fotoFile.exists()) {
+                            Image img = Image.getInstance(fotoFile.getAbsolutePath());
+                            img.scaleToFit(160, 130);
+                            PdfPCell imgCell = new PdfPCell();
+                            imgCell.addElement(img);
+                            imgCell.setBorder(Rectangle.BOX);
+                            imgCell.setPadding(5);
+                            imgCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                            Paragraph etiqueta = new Paragraph(etiquetas[i], fNormal);
+                            etiqueta.setAlignment(Element.ALIGN_CENTER);
+                            imgCell.addElement(etiqueta);
+                            fotosTable.addCell(imgCell);
+                        }
+                    } catch (Exception e) {
+                        // Si falla la foto continúa sin ella
+                    }
+                }
+            }
+            doc.add(fotosTable);
+            doc.add(Chunk.NEWLINE);
+        }
+
         PdfPTable firmas = new PdfPTable(2);
         firmas.setWidthPercentage(80);
         firmas.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -300,7 +367,6 @@ public class ReporteServicioService {
         doc.add(firmas);
         doc.add(Chunk.NEWLINE);
 
-        // PIE
         PdfPTable pie = new PdfPTable(4);
         pie.setWidthPercentage(100);
         pie.setSpacingBefore(10);

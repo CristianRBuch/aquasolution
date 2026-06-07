@@ -113,6 +113,15 @@ public class ReporteServicio {
     @OneToMany(mappedBy = "reporte", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MaterialUtilizado> materiales;
 
+    @Column(length = 500)
+    private String foto1;
+
+    @Column(length = 500)
+    private String foto2;
+
+    @Column(length = 500)
+    private String foto3;
+
     @Column(updatable = false)
     private LocalDateTime fechaCreacion;
 

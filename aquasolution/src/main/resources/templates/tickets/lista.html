@@ -60,6 +60,11 @@
           <i class="fas fa-users me-2"></i> Usuarios
         </a>
       </li>
+      <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+        <a class="nav-link" th:href="@{/auditoria}">
+          <i class="fas fa-shield-alt me-2"></i> Auditoría
+        </a>
+      </li>
       <li>
         <p class="nav-section">Operaciones</p>
       </li>
@@ -367,7 +372,8 @@
               <div class="mb-3">
                 <label class="form-label fw-semibold">Fecha de Visita</label>
                 <input type="date" name="fechaVisita" class="form-control rounded-3"
-                       th:value="${ticket.fechaVisita != null ? #temporals.format(ticket.fechaVisita, 'yyyy-MM-dd') : ''}">
+                       th:value="${ticket.fechaVisita != null ? #temporals.format(ticket.fechaVisita, 'yyyy-MM-dd') : ''}"
+                       th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
               </div>
               <button type="submit" class="btn btn-primary rounded-3 w-100">
                 <i class="fas fa-calendar-check me-2"></i>Asignar y Programar Visita
@@ -470,6 +476,13 @@
                 <option value="">Seleccionar piscina...</option>
                 <option th:each="piscina : ${piscinas}" th:value="${piscina.id}" th:attr="data-cliente=${piscina.cliente.id}" th:text="${piscina.nombre}"></option>
               </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">
+                <i class="fas fa-map-marker-alt me-1 text-danger"></i>Dirección de Visita
+              </label>
+              <input type="text" name="direccion" class="form-control rounded-3"
+                     placeholder="Ej: Zona 10, Ciudad de Guatemala">
             </div>
             <div class="col-12">
               <label class="form-label fw-semibold">Observaciones</label>

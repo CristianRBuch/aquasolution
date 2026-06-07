@@ -48,6 +48,6 @@ public class Piscina {
     }
 
     public enum TipoPiscina {
-        RECTANGULAR, CIRCULAR, IRREGULAR
+        RECTANGULAR, CIRCULAR, OVAL, RINON, IRREGULAR
     }
 }

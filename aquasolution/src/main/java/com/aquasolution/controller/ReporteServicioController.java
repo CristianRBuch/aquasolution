@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,15 +27,18 @@ public class ReporteServicioController {
     private final TicketService ticketService;
     private final UsuarioService usuarioService;
     private final PiscinaService piscinaService;
+    private final org.springframework.core.env.Environment env;
 
     public ReporteServicioController(ReporteServicioService reporteService,
                                      TicketService ticketService,
                                      UsuarioService usuarioService,
-                                     PiscinaService piscinaService) {
+                                     PiscinaService piscinaService,
+                                     org.springframework.core.env.Environment env) {
         this.reporteService = reporteService;
         this.ticketService = ticketService;
         this.usuarioService = usuarioService;
         this.piscinaService = piscinaService;
+        this.env = env;
     }
 
     @GetMapping
@@ -58,7 +62,7 @@ public class ReporteServicioController {
         return "reportes/lista";
     }
 
-    @PostMapping("/guardar")
+    @PostMapping(value = "/guardar", consumes = "multipart/form-data")
     public String guardarReporte(
             @RequestParam Long ticketId,
             @RequestParam(required = false) Long tecnicoId,
@@ -91,6 +95,9 @@ public class ReporteServicioController {
             @RequestParam(required = false) List<Integer> cantidad,
             @RequestParam(required = false) List<String> descripcionMaterial,
             @RequestParam(required = false) List<String> notas,
+            @RequestParam(required = false) MultipartFile foto1,
+            @RequestParam(required = false) MultipartFile foto2,
+            @RequestParam(required = false) MultipartFile foto3,
             Authentication authentication,
             RedirectAttributes redirect) {
 
@@ -99,7 +106,6 @@ public class ReporteServicioController {
         Usuario cliente = usuarioService.obtenerPorId(clienteId)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
-        // Técnico — sin duplicado
         Usuario tecnico;
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
         if (rol.equals("TECNICO")) {
@@ -111,7 +117,7 @@ public class ReporteServicioController {
         } else if (ticket.getTecnico() != null) {
             tecnico = ticket.getTecnico();
         } else {
-            redirect.addFlashAttribute("error", "El ticket no tiene técnico asignado. Asigna un técnico primero.");
+            redirect.addFlashAttribute("error", "El ticket no tiene técnico asignado.");
             return "redirect:/reportes";
         }
 
@@ -163,9 +169,16 @@ public class ReporteServicioController {
             }
         }
         reporte.setMateriales(materiales);
+
+        // Guardar fotos
+        String uploadDir = System.getProperty("user.dir") + "/" +
+                env.getProperty("app.upload.dir", "uploads/reportes");
+        reporte.setFoto1(guardarFoto(foto1, uploadDir));
+        reporte.setFoto2(guardarFoto(foto2, uploadDir));
+        reporte.setFoto3(guardarFoto(foto3, uploadDir));
+
         reporteService.guardar(reporte);
         ticketService.cambiarEstado(ticketId, Ticket.EstadoTicket.RESUELTO);
-
         redirect.addFlashAttribute("exito", "Reporte guardado correctamente.");
         return "redirect:/reportes";
     }
@@ -190,5 +203,32 @@ public class ReporteServicioController {
         reporteService.eliminar(id);
         redirect.addFlashAttribute("exito", "Reporte eliminado correctamente.");
         return "redirect:/reportes";
+    }
+
+    private String guardarFoto(MultipartFile foto, String uploadDir) {
+        if (foto == null || foto.isEmpty()) return null;
+        try {
+            String contentType = foto.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) return null;
+            if (foto.getSize() > 10 * 1024 * 1024) return null;
+
+            java.nio.file.Path dirPath = java.nio.file.Paths.get(uploadDir);
+            if (!java.nio.file.Files.exists(dirPath)) {
+                java.nio.file.Files.createDirectories(dirPath);
+            }
+
+            String extension = foto.getOriginalFilename() != null &&
+                    foto.getOriginalFilename().contains(".") ?
+                    foto.getOriginalFilename()
+                            .substring(foto.getOriginalFilename().lastIndexOf(".")) : ".jpg";
+
+            String nombreArchivo = "foto_" + System.currentTimeMillis() + extension;
+            java.nio.file.Path rutaArchivo = dirPath.resolve(nombreArchivo);
+            java.nio.file.Files.copy(foto.getInputStream(), rutaArchivo,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return nombreArchivo;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

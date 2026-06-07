@@ -52,12 +52,17 @@ public class UsuarioController {
         if (rol.equals("TECNICO")) {
             Usuario tecnico = usuarioService.obtenerPorUsername(username)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            model.addAttribute("misTickets",
-                    ticketService.obtenerPorTecnico(tecnico).size());
-            model.addAttribute("ticketsAbiertos",
-                    ticketService.obtenerPorTecnicoYEstado(tecnico, Ticket.EstadoTicket.ABIERTO).size());
-            model.addAttribute("ticketsEnProceso",
-                    ticketService.obtenerPorTecnicoYEstado(tecnico, Ticket.EstadoTicket.EN_PROCESO).size());
+
+            var abiertos   = ticketService.obtenerPorTecnicoYEstado(tecnico, Ticket.EstadoTicket.ABIERTO);
+            var enProceso  = ticketService.obtenerPorTecnicoYEstado(tecnico, Ticket.EstadoTicket.EN_PROCESO);
+            var resueltos  = ticketService.obtenerPorTecnicoYEstado(tecnico, Ticket.EstadoTicket.RESUELTO);
+
+            model.addAttribute("misTicketsAbiertos",   abiertos);
+            model.addAttribute("misTicketsEnProceso",  enProceso);
+            model.addAttribute("misTicketsResueltos",  resueltos);
+            model.addAttribute("ticketsAbiertos",      abiertos.size());
+            model.addAttribute("ticketsEnProceso",     enProceso.size());
+            model.addAttribute("ticketsResueltos",     resueltos.size());
             model.addAttribute("totalReportes",
                     reporteServicioService.obtenerPorTecnico(tecnico).size());
             return "tecnico/dashboard";

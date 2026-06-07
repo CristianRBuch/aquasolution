@@ -54,6 +54,11 @@
                     <i class="fas fa-users me-2"></i> Usuarios
                 </a>
             </li>
+            <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+                <a class="nav-link" th:href="@{/auditoria}">
+                    <i class="fas fa-shield-alt me-2"></i> Auditoría
+                </a>
+            </li>
             <li>
                 <p class="nav-section">Operaciones</p>
             </li>
@@ -186,7 +191,7 @@
                 <h5 class="modal-title text-white"><i class="fas fa-clipboard-list me-2"></i>Nuevo Reporte de Servicio</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form th:action="@{/reportes/guardar}" method="post">
+            <form th:action="@{/reportes/guardar}" method="post" enctype="multipart/form-data">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
@@ -195,11 +200,12 @@
                                 <option value="">Seleccionar ticket...</option>
                                 <option th:each="ticket : ${tickets}" th:value="${ticket.id}"
                                         th:attr="data-cliente=${ticket.cliente.id},
-                                                 data-cliente-nombre=${ticket.cliente.nombreCompleto},
-                                                 data-tecnico=${ticket.tecnico != null ? ticket.tecnico.id : ''},
-                                                 data-tecnico-nombre=${ticket.tecnico != null ? ticket.tecnico.nombreCompleto : 'Sin asignar'},
-                                                 data-piscina=${ticket.piscina != null ? ticket.piscina.id : ''},
-                                                 data-piscina-nombre=${ticket.piscina != null ? ticket.piscina.nombre : 'N/A'}"
+                                                data-cliente-nombre=${ticket.cliente.nombreCompleto},
+                                                data-tecnico=${ticket.tecnico != null ? ticket.tecnico.id : ''},
+                                                data-tecnico-nombre=${ticket.tecnico != null ? ticket.tecnico.nombreCompleto : 'Sin asignar'},
+                                                data-piscina=${ticket.piscina != null ? ticket.piscina.id : ''},
+                                                data-piscina-nombre=${ticket.piscina != null ? ticket.piscina.nombre : 'N/A'},
+                                                data-tipo=${ticket.tipoServicio != null ? ticket.tipoServicio : ''}"
                                         th:text="'#' + ${ticket.id} + ' - ' + ${ticket.titulo}">
                                 </option>
                             </select>
@@ -212,12 +218,12 @@
                             <label class="form-label fw-semibold">Tipo de Servicio</label>
                             <select name="tipoServicio" class="form-select rounded-3" onchange="mostrarCampos(this.value)" required>
                                 <option value="">Seleccionar tipo...</option>
-                                <option value="PISCINA_JACUZZI">🏊 Piscina / Jacuzzi</option>
-                                <option value="HIDRONEUMATICO">🏢 Sistema Hidroneumático</option>
-                                <option value="POZO">🔩 Pozo</option>
-                                <option value="BOMBA_GENERAL">💧 Bomba General</option>
-                                <option value="RIEGO">🌱 Sistema de Riego</option>
-                                <option value="OTRO">📝 Otro</option>
+                                <option value="PISCINA_JACUZZI"> Piscina / Jacuzzi</option>
+                                <option value="HIDRONEUMATICO"> Sistema Hidroneumático</option>
+                                <option value="POZO"> Pozo</option>
+                                <option value="BOMBA_GENERAL"> Bomba General</option>
+                                <option value="RIEGO"> Sistema de Riego</option>
+                                <option value="OTRO"> Otro</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -303,6 +309,52 @@
                         <div class="col-12"><label class="form-label fw-semibold">Trabajo Realizado</label><textarea name="trabajoRealizado" class="form-control rounded-3" rows="3" placeholder="Describe detalladamente el trabajo realizado..."></textarea></div>
                         <div class="col-md-6"><label class="form-label fw-semibold">Observaciones</label><textarea name="observaciones" class="form-control rounded-3" rows="2" placeholder="Observaciones adicionales..."></textarea></div>
                         <div class="col-md-6"><label class="form-label fw-semibold">Próxima Visita Recomendada</label><textarea name="proximaVisita" class="form-control rounded-3" rows="2" placeholder="Ej: Revisión en 30 días..."></textarea></div>
+                        <!-- Fotos del servicio -->
+                        <div class="row g-3 mt-2">
+                            <div class="col-12">
+                                <h6 class="fw-bold mb-2">
+                                    <i class="fas fa-camera me-2 text-primary"></i>
+                                    Evidencia Fotográfica
+                                    <small class="text-muted fw-normal">(Opcional — máx. 10MB por foto, solo imágenes)</small>
+                                </h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                     Foto 1 — Antes del tratamiento
+                                </label>
+                                <input type="file" name="foto1" class="form-control rounded-3"
+                                       accept="image/jpeg,image/png,image/jpg,image/webp"
+                                       onchange="previsualizarFoto(this, 'preview1')">
+                                <div id="preview1" class="mt-2" style="display:none;">
+                                    <img src="" alt="Preview" class="img-fluid rounded-3"
+                                         style="max-height:150px;object-fit:cover;width:100%;">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                     Foto 2 — Después del tratamiento
+                                </label>
+                                <input type="file" name="foto2" class="form-control rounded-3"
+                                       accept="image/jpeg,image/png,image/jpg,image/webp"
+                                       onchange="previsualizarFoto(this, 'preview2')">
+                                <div id="preview2" class="mt-2" style="display:none;">
+                                    <img src="" alt="Preview" class="img-fluid rounded-3"
+                                         style="max-height:150px;object-fit:cover;width:100%;">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                     Foto 3 — Equipo / Instalación
+                                </label>
+                                <input type="file" name="foto3" class="form-control rounded-3"
+                                       accept="image/jpeg,image/png,image/jpg,image/webp"
+                                       onchange="previsualizarFoto(this, 'preview3')">
+                                <div id="preview3" class="mt-2" style="display:none;">
+                                    <img src="" alt="Preview" class="img-fluid rounded-3"
+                                         style="max-height:150px;object-fit:cover;width:100%;">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -324,6 +376,14 @@
         document.getElementById('clienteNombre').value = option.dataset.clienteNombre || '';
         document.getElementById('piscinaId').value = option.dataset.piscina || '';
         document.getElementById('piscinaNombre').value = option.dataset.piscinaNombre || '';
+
+        // Auto-seleccionar tipo de servicio del ticket
+        const tipo = option.dataset.tipo || '';
+        const selectTipo = document.querySelector('select[name="tipoServicio"]');
+        if (tipo && selectTipo) {
+            selectTipo.value = tipo;
+            mostrarCampos(tipo);
+        }
     }
     function mostrarCampos(tipo) {
         document.querySelectorAll('.seccion-equipo').forEach(s => s.classList.remove('activa'));
@@ -334,6 +394,35 @@
         const fila = `<tr><td><input type="number" name="cantidad" class="form-control rounded-3" min="1" value="1"></td><td><input type="text" name="descripcionMaterial" class="form-control rounded-3" placeholder="Material utilizado..."></td><td><input type="text" name="notas" class="form-control rounded-3" placeholder="Observaciones..."></td><td><button type="button" class="btn btn-outline-danger btn-sm rounded-3" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td></tr>`;
         tbody.insertAdjacentHTML('beforeend', fila);
     }
+
+    function previsualizarFoto(input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        // Validar tamaño
+        if (file.size > 10 * 1024 * 1024) {
+            alert('La foto no puede superar 10MB.');
+            input.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+        // Validar tipo
+        if (!file.type.startsWith('image/')) {
+            alert('Solo se permiten archivos de imagen.');
+            input.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.querySelector('img').src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+}
 </script>
 </body>
 </html>

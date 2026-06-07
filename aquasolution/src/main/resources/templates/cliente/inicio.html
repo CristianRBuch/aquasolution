@@ -24,6 +24,8 @@
     </style>
 </head>
 <body>
+
+<!-- TOPBAR -->
 <div class="topbar d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center gap-3">
         <img th:src="@{/img/logo_blanco.png}" alt="Aqua Solution" height="50">
@@ -42,7 +44,10 @@
     </div>
 </div>
 
+<!-- CONTENIDO PRINCIPAL -->
 <div class="container-fluid p-4">
+
+    <!-- Alertas -->
     <div th:if="${exito}" class="alert alert-success alert-dismissible fade show rounded-3">
         <i class="fas fa-check-circle me-2"></i><span th:text="${exito}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -52,6 +57,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
+    <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold text-dark mb-1">Bienvenido, <span th:text="${cliente.nombreCompleto}"></span></h4>
@@ -62,25 +68,63 @@
         </button>
     </div>
 
+    <!-- Stats -->
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="card card-custom p-4">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div><p class="text-muted mb-1 small">Mis Solicitudes</p><h2 class="fw-bold mb-0" th:text="${totalTickets}">0</h2></div>
-                    <div class="stat-icon bg-primary bg-opacity-10"><i class="fas fa-ticket-alt fa-lg text-primary"></i></div>
+                    <div>
+                        <p class="text-muted mb-1 small">Mis Solicitudes</p>
+                        <h2 class="fw-bold mb-0" th:text="${totalTickets}">0</h2>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10">
+                        <i class="fas fa-ticket-alt fa-lg text-primary"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="card card-custom p-4">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div><p class="text-muted mb-1 small">Mis Cotizaciones</p><h2 class="fw-bold mb-0" th:text="${totalCotizaciones}">0</h2></div>
-                    <div class="stat-icon bg-success bg-opacity-10"><i class="fas fa-file-invoice-dollar fa-lg text-success"></i></div>
+                    <div>
+                        <p class="text-muted mb-1 small">Mis Cotizaciones</p>
+                        <h2 class="fw-bold mb-0" th:text="${totalCotizaciones}">0</h2>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10">
+                        <i class="fas fa-file-invoice-dollar fa-lg text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-custom p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 small">Mis Reportes</p>
+                        <h2 class="fw-bold mb-0" th:text="${totalReportes}">0</h2>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10">
+                        <i class="fas fa-clipboard-check fa-lg text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-custom p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 small">Dosificaciones</p>
+                        <h2 class="fw-bold mb-0" th:text="${totalDosificaciones}">0</h2>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10">
+                        <i class="fas fa-flask fa-lg text-warning"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Tickets -->
     <div class="card card-custom mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
             <h5 class="fw-bold mb-0"><i class="fas fa-ticket-alt me-2 text-primary"></i>Mis Solicitudes de Servicio</h5>
@@ -115,14 +159,15 @@
                     <td class="py-3 small" th:text="${#temporals.format(ticket.fechaCreacion, 'dd/MM/yyyy')}"></td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(tickets)}">
-                    <td colspan="6" class="text-center py-4 text-muted">No tienes solicitudes registradas. ¡Haz tu primera solicitud!</td>
+                    <td colspan="6" class="text-center py-4 text-muted">No tienes solicitudes registradas.</td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="card card-custom">
+    <!-- Cotizaciones -->
+    <div class="card card-custom mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
             <h5 class="fw-bold mb-0"><i class="fas fa-file-invoice-dollar me-2 text-success"></i>Mis Cotizaciones</h5>
         </div>
@@ -161,9 +206,120 @@
             </table>
         </div>
     </div>
-</div>
 
-<!-- Modal -->
+    <!-- Reportes de Servicio -->
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-clipboard-check me-2 text-primary"></i>Mis Reportes de Servicio
+            </h5>
+            <span class="badge bg-primary rounded-pill" th:text="${totalReportes}"></span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th class="px-4 py-3">No. Reporte</th>
+                    <th class="py-3">Tipo</th>
+                    <th class="py-3">Técnico</th>
+                    <th class="py-3">Piscina</th>
+                    <th class="py-3">Fecha</th>
+                    <th class="py-3">PDF</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="reporte : ${reportes}">
+                    <td class="px-4 py-3 fw-semibold" th:text="'No. ' + ${reporte.numeroReporte}"></td>
+                    <td class="py-3">
+                        <span th:if="${reporte.tipoServicio.name() == 'PISCINA_JACUZZI'}" class="badge bg-info text-dark">🏊 Piscina/Jacuzzi</span>
+                        <span th:if="${reporte.tipoServicio.name() == 'HIDRONEUMATICO'}" class="badge bg-primary">🏢 Hidroneumático</span>
+                        <span th:if="${reporte.tipoServicio.name() == 'POZO'}" class="badge bg-secondary">🔩 Pozo</span>
+                        <span th:if="${reporte.tipoServicio.name() == 'BOMBA_GENERAL'}" class="badge bg-warning text-dark">💧 Bomba</span>
+                        <span th:if="${reporte.tipoServicio.name() == 'RIEGO'}" class="badge bg-success">🌱 Riego</span>
+                        <span th:if="${reporte.tipoServicio.name() == 'OTRO'}" class="badge bg-dark">📝 Otro</span>
+                    </td>
+                    <td class="py-3" th:text="${reporte.tecnico.nombreCompleto}"></td>
+                    <td class="py-3">
+                        <span th:if="${reporte.piscina != null}" th:text="${reporte.piscina.nombre}"></span>
+                        <span th:if="${reporte.piscina == null}" class="text-muted small">N/A</span>
+                    </td>
+                    <td class="py-3 small" th:text="${#temporals.format(reporte.fechaServicio, 'dd/MM/yyyy')}"></td>
+                    <td class="py-3">
+                        <a th:href="@{/reportes/pdf/{id}(id=${reporte.id})}" class="btn btn-sm btn-outline-primary rounded-3">
+                            <i class="fas fa-file-pdf me-1"></i>Descargar
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(reportes)}">
+                    <td colspan="6" class="text-center py-4 text-muted">No tienes reportes de servicio registrados.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Dosificaciones -->
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-flask me-2 text-success"></i>Mis Reportes de Dosificación
+            </h5>
+            <span class="badge bg-success rounded-pill" th:text="${totalDosificaciones}"></span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th class="px-4 py-3">No. Dosificación</th>
+                    <th class="py-3">Piscina</th>
+                    <th class="py-3">Técnico</th>
+                    <th class="py-3">Cloro</th>
+                    <th class="py-3">pH</th>
+                    <th class="py-3">LSI</th>
+                    <th class="py-3">Fecha</th>
+                    <th class="py-3">PDF</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="dos : ${dosificaciones}">
+                    <td class="px-4 py-3 fw-semibold" th:text="${dos.numeroDosificacion}"></td>
+                    <td class="py-3" th:text="${dos.piscina.nombre}"></td>
+                    <td class="py-3" th:text="${dos.tecnico.nombreCompleto}"></td>
+                    <td class="py-3">
+                        <span th:text="${dos.cloroLibre} + ' ppm'"
+                              th:classappend="${dos.cloroLibre >= 2.0 and dos.cloroLibre <= 4.0} ? 'badge bg-success' : (${dos.cloroLibre >= 1.0 and dos.cloroLibre <= 5.0} ? 'badge bg-warning text-dark' : 'badge bg-danger')">
+                        </span>
+                    </td>
+                    <td class="py-3">
+                        <span th:text="${dos.ph}"
+                              th:classappend="${dos.ph >= 7.4 and dos.ph <= 7.6} ? 'badge bg-success' : (${dos.ph >= 7.2 and dos.ph <= 7.8} ? 'badge bg-warning text-dark' : 'badge bg-danger')">
+                        </span>
+                    </td>
+                    <td class="py-3">
+                        <span th:if="${dos.lsi != null}" th:text="${dos.lsi}"
+                              th:classappend="${dos.estadoLsi == 'BALANCEADA'} ? 'badge bg-success' : (${dos.estadoLsi == 'CORROSIVA' or dos.estadoLsi == 'INCRUSTANTE'} ? 'badge bg-danger' : 'badge bg-warning text-dark')">
+                        </span>
+                        <span th:if="${dos.lsi == null}" class="text-muted small">N/A</span>
+                    </td>
+                    <td class="py-3 small" th:text="${#temporals.format(dos.fechaCreacion, 'dd/MM/yyyy')}"></td>
+                    <td class="py-3">
+                        <a th:href="@{/dosificaciones/pdf/{id}(id=${dos.id})}" class="btn btn-sm btn-outline-success rounded-3">
+                            <i class="fas fa-file-pdf me-1"></i>Descargar
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(dosificaciones)}">
+                    <td colspan="8" class="text-center py-4 text-muted">No tienes reportes de dosificación registrados.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<!-- FIN CONTENIDO PRINCIPAL -->
+
+<!-- MODAL SOLICITAR SERVICIO -->
 <div class="modal fade" id="modalSolicitar" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-4">
@@ -174,14 +330,12 @@
             <form id="formSolicitar" th:action="@{/cliente/solicitar}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <input type="hidden" name="prioridad" value="MEDIA">
-                <!-- CAMPO HIDDEN QUE ENVÍA EL TÍTULO -->
                 <input type="hidden" name="titulo" id="inputTitulo" value="">
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold">Tipo de Servicio</label>
-                            <select class="form-select rounded-3" id="tipoServicio"
-                                    onchange="mostrarOtro(this)" required>
+                            <select class="form-select rounded-3" id="tipoServicio" onchange="mostrarOtro(this)" required>
                                 <option value="">Seleccionar servicio...</option>
                                 <option value="Mantenimiento de Piscina">🏊 Mantenimiento de Piscina</option>
                                 <option value="Mantenimiento de Jacuzzi">🛁 Mantenimiento de Jacuzzi</option>
@@ -196,42 +350,31 @@
                                 <option value="Otro">📝 Otro (describir)</option>
                             </select>
                         </div>
-
                         <div class="col-12" id="campoOtro" style="display:none;">
                             <label class="form-label fw-semibold">Especifica el servicio</label>
-                            <input type="text" id="tituloOtro" class="form-control rounded-3"
-                                   placeholder="Describe brevemente el servicio...">
+                            <input type="text" id="tituloOtro" class="form-control rounded-3" placeholder="Describe brevemente el servicio...">
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Marca del equipo <small class="text-muted">(si aplica)</small></label>
-                            <input type="text" name="marcaEquipo" class="form-control rounded-3"
-                                   placeholder="Ej: Grundfos, Pentair, Hayward...">
+                            <input type="text" name="marcaEquipo" class="form-control rounded-3" placeholder="Ej: Grundfos, Pentair, Hayward...">
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Teléfono de contacto</label>
-                            <input type="text" name="telefono" class="form-control rounded-3"
-                                   placeholder="Número donde podemos llamarte..." required>
+                            <input type="tel" name="telefono" class="form-control rounded-3" pattern="[0-9]{8}" maxlength="8" placeholder="12345678" required>
                         </div>
-
                         <div class="col-12">
                             <label class="form-label fw-semibold">Descripción del problema</label>
-                            <textarea name="descripcion" class="form-control rounded-3" rows="3"
-                                      placeholder="Describe qué está pasando o qué necesitas exactamente..." required></textarea>
+                            <textarea name="descripcion" class="form-control rounded-3" rows="3" placeholder="Describe qué está pasando o qué necesitas exactamente..." required></textarea>
                         </div>
-
                         <div class="col-12">
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-map-marker-alt me-1 text-primary"></i>
                                 Dirección del servicio <small class="text-muted">(Solo Guatemala)</small>
                             </label>
                         </div>
-
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Departamento</label>
-                            <select id="selectDepartamento" class="form-select rounded-3"
-                                    onchange="cargarMunicipios(this.value)">
+                            <select id="selectDepartamento" class="form-select rounded-3" onchange="cargarMunicipios(this.value)">
                                 <option value="Guatemala" selected>Guatemala</option>
                                 <option value="Alta Verapaz">Alta Verapaz</option>
                                 <option value="Baja Verapaz">Baja Verapaz</option>
@@ -257,16 +400,13 @@
                             </select>
                             <input type="hidden" name="departamento" id="inputDepartamento" value="Guatemala">
                         </div>
-
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Municipio</label>
-                            <select id="selectMunicipio" class="form-select rounded-3"
-                                    onchange="cargarZonas(this.value)">
+                            <select id="selectMunicipio" class="form-select rounded-3" onchange="cargarZonas(this.value)">
                                 <option value="">Seleccionar municipio...</option>
                             </select>
                             <input type="hidden" name="municipio" id="inputMunicipio">
                         </div>
-
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Zona <small class="text-muted">(si aplica)</small></label>
                             <select id="selectZona" class="form-select rounded-3">
@@ -274,17 +414,13 @@
                             </select>
                             <input type="hidden" name="zona" id="inputZona">
                         </div>
-
                         <div class="col-12">
                             <label class="form-label fw-semibold">Dirección exacta</label>
-                            <input type="text" name="direccionExacta" class="form-control rounded-3"
-                                   placeholder="Colonia, calle, número de casa..." required>
+                            <input type="text" name="direccionExacta" class="form-control rounded-3" placeholder="Colonia, calle, número de casa..." required>
                         </div>
-
                         <div class="col-12">
                             <label class="form-label fw-semibold">Disponibilidad <small class="text-muted">(opcional)</small></label>
-                            <input type="text" name="observaciones" class="form-control rounded-3"
-                                   placeholder="Ej: Lunes a viernes después de las 3pm...">
+                            <input type="text" name="observaciones" class="form-control rounded-3" placeholder="Ej: Lunes a viernes después de las 3pm...">
                         </div>
                     </div>
                 </div>
@@ -302,28 +438,28 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const municipios = {
-        'Guatemala': ['Guatemala', 'Mixco', 'Villa Nueva', 'San Miguel Petapa', 'Chinautla', 'San Pedro Ayampuc', 'Amatitlán', 'Santa Catarina Pinula', 'San José Pinula', 'Fraijanes', 'Villa Canales', 'Palencia', 'San Raymundo', 'Chuarrancho', 'San Juan Sacatepéquez', 'San Pedro Sacatepéquez'],
-        'Alta Verapaz': ['Cobán', 'San Cristóbal Verapaz', 'Tactic', 'Tamahú', 'Tucurú', 'Panzós', 'Senahú', 'San Pedro Carchá', 'San Juan Chamelco', 'Lanquín', 'Cahabón', 'Chisec', 'Chahal', 'Fray Bartolomé de las Casas', 'Santa Catalina La Tinta', 'Raxruhá'],
-        'Baja Verapaz': ['Salamá', 'San Miguel Chicaj', 'Rabinal', 'Cubulco', 'Granados', 'Santa Cruz El Chol', 'San Jerónimo', 'Purulhá'],
-        'Chimaltenango': ['Chimaltenango', 'San José Poaquil', 'San Martín Jilotepeque', 'Comalapa', 'Santa Apolonia', 'Tecpán Guatemala', 'Patzún', 'Pochuta', 'Patzicía', 'Santa Cruz Balanyá', 'Acatenango', 'Yepocapa', 'San Andrés Itzapa', 'Parramos', 'Zaragoza', 'El Tejar'],
-        'Chiquimula': ['Chiquimula', 'San José La Arada', 'San Juan Ermita', 'Jocotán', 'Camotán', 'Olopa', 'Esquipulas', 'Concepción Las Minas', 'Quezaltepeque', 'San Jacinto', 'Ipala'],
-        'El Progreso': ['Guastatoya', 'Morazán', 'San Agustín Acasaguastlán', 'San Cristóbal Acasaguastlán', 'El Jícaro', 'Sansare', 'Sanarate', 'San Antonio La Paz'],
-        'Escuintla': ['Escuintla', 'Santa Lucía Cotzumalguapa', 'La Democracia', 'Siquinalá', 'Masagua', 'Tiquisate', 'La Gomera', 'Guanagazapa', 'San José', 'Iztapa', 'Palín', 'San Vicente Pacaya', 'Nueva Concepción'],
-        'Huehuetenango': ['Huehuetenango', 'Chiantla', 'Malacatancito', 'Cuilco', 'Nentón', 'San Pedro Necta', 'Jacaltenango', 'San Pedro Soloma', 'San Ildefonso Ixtahuacán', 'Santa Bárbara', 'La Libertad', 'La Democracia', 'San Miguel Acatán', 'San Rafael La Independencia', 'Todos Santos Cuchumatán', 'San Juan Atitán', 'Santa Eulalia', 'San Mateo Ixtatán', 'Colotenango', 'San Sebastián Huehuetenango', 'Tectitán', 'Concepción Huista', 'San Juan Ixcoy', 'San Antonio Huista', 'San Sebastián Coatán', 'Barillas', 'Aguacatán', 'San Rafael Petzal', 'San Gaspar Ixchil', 'Santiago Chimaltenango', 'Santa Ana Huista'],
-        'Izabal': ['Puerto Barrios', 'Livingston', 'El Estor', 'Morales', 'Los Amates'],
-        'Jalapa': ['Jalapa', 'San Pedro Pinula', 'San Luis Jilotepeque', 'San Manuel Chaparrón', 'San Carlos Alzatate', 'Monjas', 'Mataquescuintla'],
-        'Jutiapa': ['Jutiapa', 'El Progreso', 'Santa Catarina Mita', 'Agua Blanca', 'Asunción Mita', 'Yupiltepeque', 'Atescatempa', 'Jerez', 'El Adelanto', 'Zapotitlán', 'Comapa', 'Jalpatagua', 'Conguaco', 'Moyuta', 'Pasaco', 'San José Acatempa', 'Quesada'],
-        'Petén': ['Flores', 'San José', 'San Benito', 'San Andrés', 'La Libertad', 'San Francisco', 'Santa Ana', 'Dolores', 'San Luis', 'Sayaxché', 'Melchor de Mencos', 'Poptún', 'Las Cruces', 'El Chal'],
-        'Quetzaltenango': ['Quetzaltenango', 'Salcajá', 'Olintepeque', 'San Carlos Sija', 'Sibilia', 'Cabricán', 'Cajolá', 'San Miguel Sigüilá', 'Ostuncalco', 'San Mateo', 'Concepción Chiquirichapa', 'San Martín Sacatepéquez', 'Almolonga', 'Cantel', 'Huitán', 'Zunil', 'Colomba', 'San Francisco La Unión', 'El Palmar', 'Coatepeque', 'Génova', 'Flores Costa Cuca', 'La Esperanza', 'Palestina de Los Altos'],
-        'Quiché': ['Santa Cruz del Quiché', 'Chiché', 'Chinique', 'Zacualpa', 'Chajul', 'Chichicastenango', 'Patzité', 'San Antonio Ilotenango', 'San Pedro Jocopilas', 'Cunén', 'San Juan Cotzal', 'Joyabaj', 'Nebaj', 'San Andrés Sajcabajá', 'Uspantán', 'Sacapulas', 'San Bartolomé Jocotenango', 'Canillá', 'Chicamán', 'Ixcán', 'Pachalum'],
-        'Retalhuleu': ['Retalhuleu', 'San Sebastián', 'Santa Cruz Muluá', 'San Martín Zapotitlán', 'San Felipe', 'San Andrés Villa Seca', 'Champerico', 'Nuevo San Carlos', 'El Asintal'],
-        'Sacatepéquez': ['Antigua Guatemala', 'Jocotenango', 'Pastores', 'Sumpango', 'Santo Domingo Xenacoj', 'Santiago Sacatepéquez', 'San Bartolomé Milpas Altas', 'San Lucas Sacatepéquez', 'Santa Lucía Milpas Altas', 'Magdalena Milpas Altas', 'Santa María de Jesús', 'Ciudad Vieja', 'San Miguel Dueñas', 'Alotenango', 'San Antonio Aguas Calientes', 'Santa Catarina Barahona'],
-        'San Marcos': ['San Marcos', 'San Pedro Sacatepéquez', 'San Antonio Sacatepéquez', 'Comitancillo', 'San Miguel Ixtahuacán', 'Concepción Tutuapa', 'Tacaná', 'Sibinal', 'Tajumulco', 'Tejutla', 'San Rafael Pie de la Cuesta', 'Nuevo Progreso', 'El Tumbador', 'El Rodeo', 'Malacatán', 'Catarina', 'Ayutla', 'Ocós', 'San Pablo', 'El Quetzal', 'La Reforma', 'Pajapita', 'Ixchiguán', 'San José Ojetenam', 'San Cristóbal Cucho', 'Sipacapa', 'Esquipulas Palo Gordo', 'Río Blanco', 'San Lorenzo'],
-        'Santa Rosa': ['Cuilapa', 'Barberena', 'Santa Rosa de Lima', 'Casillas', 'San Rafael Las Flores', 'Oratorio', 'San Juan Tecuaco', 'Chiquimulilla', 'Taxisco', 'Santa María Ixhuatán', 'Guazacapán', 'Santa Cruz Naranjo', 'Pueblo Nuevo Viñas', 'Nueva Santa Rosa'],
-        'Sololá': ['Sololá', 'San José Chacayá', 'Santa María Visitación', 'Santa Lucía Utatlán', 'Nahualá', 'Santa Catarina Ixtahuacán', 'Santa Clara La Laguna', 'Concepción', 'San Andrés Semetabaj', 'Panajachel', 'Santa Catarina Palopó', 'San Antonio Palopó', 'San Lucas Tolimán', 'Santa Cruz La Laguna', 'San Pablo La Laguna', 'San Marcos La Laguna', 'San Juan La Laguna', 'San Pedro La Laguna', 'Santiago Atitlán'],
-        'Suchitepéquez': ['Mazatenango', 'Cuyotenango', 'San Francisco Zapotitlán', 'San Bernardino', 'San José El Ídolo', 'Santo Domingo Suchitepéquez', 'San Lorenzo', 'Samayac', 'San Pablo Jocopilas', 'San Antonio Suchitepéquez', 'San Miguel Panán', 'San Gabriel', 'Chicacao', 'Patulul', 'Santa Bárbara', 'San Juan Bautista', 'Santo Tomás La Unión', 'Zunilito', 'Pueblo Nuevo', 'Río Bravo'],
-        'Totonicapán': ['Totonicapán', 'San Cristóbal Totonicapán', 'San Francisco El Alto', 'San Andrés Xecul', 'Momostenango', 'Santa María Chiquimula', 'Santa Lucía La Reforma', 'San Bartolo'],
-        'Zacapa': ['Zacapa', 'Estanzuela', 'Río Hondo', 'Gualán', 'Teculután', 'Usumatlán', 'Cabañas', 'San Diego', 'La Unión', 'Huité']
+        'Guatemala': ['Guatemala','Mixco','Villa Nueva','San Miguel Petapa','Chinautla','San Pedro Ayampuc','Amatitlán','Santa Catarina Pinula','San José Pinula','Fraijanes','Villa Canales','Palencia','San Raymundo','Chuarrancho','San Juan Sacatepéquez','San Pedro Sacatepéquez'],
+        'Alta Verapaz': ['Cobán','San Cristóbal Verapaz','Tactic','Tamahú','Tucurú','Panzós','Senahú','San Pedro Carchá','San Juan Chamelco','Lanquín','Cahabón','Chisec','Chahal','Fray Bartolomé de las Casas','Santa Catalina La Tinta','Raxruhá'],
+        'Baja Verapaz': ['Salamá','San Miguel Chicaj','Rabinal','Cubulco','Granados','Santa Cruz El Chol','San Jerónimo','Purulhá'],
+        'Chimaltenango': ['Chimaltenango','San José Poaquil','San Martín Jilotepeque','Comalapa','Santa Apolonia','Tecpán Guatemala','Patzún','Pochuta','Patzicía','Santa Cruz Balanyá','Acatenango','Yepocapa','San Andrés Itzapa','Parramos','Zaragoza','El Tejar'],
+        'Chiquimula': ['Chiquimula','San José La Arada','San Juan Ermita','Jocotán','Camotán','Olopa','Esquipulas','Concepción Las Minas','Quezaltepeque','San Jacinto','Ipala'],
+        'El Progreso': ['Guastatoya','Morazán','San Agustín Acasaguastlán','San Cristóbal Acasaguastlán','El Jícaro','Sansare','Sanarate','San Antonio La Paz'],
+        'Escuintla': ['Escuintla','Santa Lucía Cotzumalguapa','La Democracia','Siquinalá','Masagua','Tiquisate','La Gomera','Guanagazapa','San José','Iztapa','Palín','San Vicente Pacaya','Nueva Concepción'],
+        'Huehuetenango': ['Huehuetenango','Chiantla','Malacatancito','Cuilco','Nentón','San Pedro Necta','Jacaltenango','San Pedro Soloma','San Ildefonso Ixtahuacán','Santa Bárbara','La Libertad','La Democracia','San Miguel Acatán','San Rafael La Independencia','Todos Santos Cuchumatán','San Juan Atitán','Santa Eulalia','San Mateo Ixtatán','Colotenango','San Sebastián Huehuetenango','Tectitán','Concepción Huista','San Juan Ixcoy','San Antonio Huista','San Sebastián Coatán','Barillas','Aguacatán','San Rafael Petzal','San Gaspar Ixchil','Santiago Chimaltenango','Santa Ana Huista'],
+        'Izabal': ['Puerto Barrios','Livingston','El Estor','Morales','Los Amates'],
+        'Jalapa': ['Jalapa','San Pedro Pinula','San Luis Jilotepeque','San Manuel Chaparrón','San Carlos Alzatate','Monjas','Mataquescuintla'],
+        'Jutiapa': ['Jutiapa','El Progreso','Santa Catarina Mita','Agua Blanca','Asunción Mita','Yupiltepeque','Atescatempa','Jerez','El Adelanto','Zapotitlán','Comapa','Jalpatagua','Conguaco','Moyuta','Pasaco','San José Acatempa','Quesada'],
+        'Petén': ['Flores','San José','San Benito','San Andrés','La Libertad','San Francisco','Santa Ana','Dolores','San Luis','Sayaxché','Melchor de Mencos','Poptún','Las Cruces','El Chal'],
+        'Quetzaltenango': ['Quetzaltenango','Salcajá','Olintepeque','San Carlos Sija','Sibilia','Cabricán','Cajolá','San Miguel Sigüilá','Ostuncalco','San Mateo','Concepción Chiquirichapa','San Martín Sacatepéquez','Almolonga','Cantel','Huitán','Zunil','Colomba','San Francisco La Unión','El Palmar','Coatepeque','Génova','Flores Costa Cuca','La Esperanza','Palestina de Los Altos'],
+        'Quiché': ['Santa Cruz del Quiché','Chiché','Chinique','Zacualpa','Chajul','Chichicastenango','Patzité','San Antonio Ilotenango','San Pedro Jocopilas','Cunén','San Juan Cotzal','Joyabaj','Nebaj','San Andrés Sajcabajá','Uspantán','Sacapulas','San Bartolomé Jocotenango','Canillá','Chicamán','Ixcán','Pachalum'],
+        'Retalhuleu': ['Retalhuleu','San Sebastián','Santa Cruz Muluá','San Martín Zapotitlán','San Felipe','San Andrés Villa Seca','Champerico','Nuevo San Carlos','El Asintal'],
+        'Sacatepéquez': ['Antigua Guatemala','Jocotenango','Pastores','Sumpango','Santo Domingo Xenacoj','Santiago Sacatepéquez','San Bartolomé Milpas Altas','San Lucas Sacatepéquez','Santa Lucía Milpas Altas','Magdalena Milpas Altas','Santa María de Jesús','Ciudad Vieja','San Miguel Dueñas','Alotenango','San Antonio Aguas Calientes','Santa Catarina Barahona'],
+        'San Marcos': ['San Marcos','San Pedro Sacatepéquez','San Antonio Sacatepéquez','Comitancillo','San Miguel Ixtahuacán','Concepción Tutuapa','Tacaná','Sibinal','Tajumulco','Tejutla','San Rafael Pie de la Cuesta','Nuevo Progreso','El Tumbador','El Rodeo','Malacatán','Catarina','Ayutla','Ocós','San Pablo','El Quetzal','La Reforma','Pajapita','Ixchiguán','San José Ojetenam','San Cristóbal Cucho','Sipacapa','Esquipulas Palo Gordo','Río Blanco','San Lorenzo'],
+        'Santa Rosa': ['Cuilapa','Barberena','Santa Rosa de Lima','Casillas','San Rafael Las Flores','Oratorio','San Juan Tecuaco','Chiquimulilla','Taxisco','Santa María Ixhuatán','Guazacapán','Santa Cruz Naranjo','Pueblo Nuevo Viñas','Nueva Santa Rosa'],
+        'Sololá': ['Sololá','San José Chacayá','Santa María Visitación','Santa Lucía Utatlán','Nahualá','Santa Catarina Ixtahuacán','Santa Clara La Laguna','Concepción','San Andrés Semetabaj','Panajachel','Santa Catarina Palopó','San Antonio Palopó','San Lucas Tolimán','Santa Cruz La Laguna','San Pablo La Laguna','San Marcos La Laguna','San Juan La Laguna','San Pedro La Laguna','Santiago Atitlán'],
+        'Suchitepéquez': ['Mazatenango','Cuyotenango','San Francisco Zapotitlán','San Bernardino','San José El Ídolo','Santo Domingo Suchitepéquez','San Lorenzo','Samayac','San Pablo Jocopilas','San Antonio Suchitepéquez','San Miguel Panán','San Gabriel','Chicacao','Patulul','Santa Bárbara','San Juan Bautista','Santo Tomás La Unión','Zunilito','Pueblo Nuevo','Río Bravo'],
+        'Totonicapán': ['Totonicapán','San Cristóbal Totonicapán','San Francisco El Alto','San Andrés Xecul','Momostenango','Santa María Chiquimula','Santa Lucía La Reforma','San Bartolo'],
+        'Zacapa': ['Zacapa','Estanzuela','Río Hondo','Gualán','Teculután','Usumatlán','Cabañas','San Diego','La Unión','Huité']
     };
 
     const zonasGuatemala = ['Zona 1','Zona 2','Zona 3','Zona 4','Zona 5','Zona 6','Zona 7','Zona 8','Zona 9','Zona 10','Zona 11','Zona 12','Zona 13','Zona 14','Zona 15','Zona 16','Zona 17','Zona 18','Zona 19','Zona 21','Zona 24','Zona 25'];
@@ -347,7 +483,7 @@
         document.getElementById('inputMunicipio').value = municipio;
         const selectZona = document.getElementById('selectZona');
         selectZona.innerHTML = '<option value="">Seleccionar zona...</option>';
-        const conZonas = ['Guatemala', 'Mixco', 'Villa Nueva', 'San Miguel Petapa', 'Amatitlán', 'Villa Canales'];
+        const conZonas = ['Guatemala','Mixco','Villa Nueva','San Miguel Petapa','Amatitlán','Villa Canales'];
         if (conZonas.includes(municipio)) {
             zonasGuatemala.forEach(zona => {
                 const opt = document.createElement('option');
@@ -381,13 +517,11 @@
         const tipoServicio = document.getElementById('tipoServicio');
         const tituloOtro = document.getElementById('tituloOtro');
         const inputTitulo = document.getElementById('inputTitulo');
-
         if (tipoServicio.value === '') {
             e.preventDefault();
             alert('Por favor selecciona el tipo de servicio.');
             return;
         }
-
         if (tipoServicio.value === 'Otro') {
             if (tituloOtro.value.trim() === '') {
                 e.preventDefault();

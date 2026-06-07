@@ -19,18 +19,21 @@ import java.util.Optional;
 public class CotizacionService {
 
     private final CotizacionRepository cotizacionRepository;
+    private final AuditoriaService auditoriaService;
 
-    public CotizacionService(CotizacionRepository cotizacionRepository) {
+    public CotizacionService(CotizacionRepository cotizacionRepository, AuditoriaService auditoriaService) {
         this.cotizacionRepository = cotizacionRepository;
+        this.auditoriaService = auditoriaService;
     }
 
-    public Cotizacion guardar(Cotizacion cotizacion) {
+    public Cotizacion guardar(Cotizacion cotizacion, String usuarioActual, String rolActual) {
+        boolean esNueva = (cotizacion.getId() == null);
+
         if (cotizacion.getNumeroCotizacion() == null) {
             LocalDateTime now = LocalDateTime.now();
             String numero = "AS" + String.format("%02d", now.getDayOfMonth())
                     + String.format("%02d", now.getMonthValue())
                     + now.getYear();
-            // Verificar si ya existe ese número y agregar sufijo único
             String numeroFinal = numero;
             int intentos = 0;
             while (cotizacionRepository.existsByNumeroCotizacion(numeroFinal)) {
@@ -44,8 +47,6 @@ public class CotizacionService {
         if (cotizacion.getDetalles() != null) {
             for (DetalleCotizacion detalle : cotizacion.getDetalles()) {
                 detalle.setCotizacion(cotizacion);
-                // Si el subtotal ya viene calculado desde el controller lo respetamos
-                // Si no, calculamos sin descuento
                 if (detalle.getSubtotal() == null) {
                     BigDecimal desc = detalle.getDescuento() != null
                             ? detalle.getDescuento() : BigDecimal.ZERO;
@@ -61,7 +62,22 @@ public class CotizacionService {
         }
         cotizacion.setSubtotal(total);
         cotizacion.setTotal(total);
-        return cotizacionRepository.save(cotizacion);
+        Cotizacion guardada = cotizacionRepository.save(cotizacion);
+
+        if (esNueva) {
+            auditoriaService.registrar(usuarioActual, rolActual, "CREATE", "Cotizaciones",
+                    "Se creó la cotización " + guardada.getNumeroCotizacion()
+                            + " para cliente: " + guardada.getCliente().getNombreCompleto());
+        } else {
+            auditoriaService.registrar(usuarioActual, rolActual, "UPDATE", "Cotizaciones",
+                    "Se editó la cotización " + guardada.getNumeroCotizacion());
+        }
+        return guardada;
+    }
+
+    // Sobrecarga para compatibilidad con llamadas existentes
+    public Cotizacion guardar(Cotizacion cotizacion) {
+        return guardar(cotizacion, "Sistema", "SISTEMA");
     }
 
     public List<Cotizacion> obtenerTodas() {
@@ -76,15 +92,32 @@ public class CotizacionService {
         return cotizacionRepository.findByCliente(cliente);
     }
 
-    public void eliminar(Long id) {
+    public void eliminar(Long id, String usuarioActual, String rolActual) {
+        cotizacionRepository.findById(id).ifPresent(c ->
+                auditoriaService.registrar(usuarioActual, rolActual, "DELETE", "Cotizaciones",
+                        "Se eliminó la cotización " + c.getNumeroCotizacion())
+        );
         cotizacionRepository.deleteById(id);
     }
 
-    public Cotizacion cambiarEstado(Long id, Cotizacion.EstadoCotizacion estado) {
+    public void eliminar(Long id) {
+        eliminar(id, "Sistema", "SISTEMA");
+    }
+
+    public Cotizacion cambiarEstado(Long id, Cotizacion.EstadoCotizacion estado, String usuarioActual, String rolActual) {
         Cotizacion cotizacion = cotizacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cotización no encontrada"));
+        Cotizacion.EstadoCotizacion estadoAnterior = cotizacion.getEstado();
         cotizacion.setEstado(estado);
-        return cotizacionRepository.save(cotizacion);
+        Cotizacion guardada = cotizacionRepository.save(cotizacion);
+        auditoriaService.registrar(usuarioActual, rolActual, "UPDATE", "Cotizaciones",
+                "Cotización " + cotizacion.getNumeroCotizacion()
+                        + " cambió estado de " + estadoAnterior + " a " + estado);
+        return guardada;
+    }
+
+    public Cotizacion cambiarEstado(Long id, Cotizacion.EstadoCotizacion estado) {
+        return cambiarEstado(id, estado, "Sistema", "SISTEMA");
     }
 
     public byte[] generarPDF(Long id) throws Exception {
@@ -109,7 +142,6 @@ public class CotizacionService {
         Font fPie = new Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, BaseColor.GRAY);
         Font fCondicion = new Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, BaseColor.DARK_GRAY);
 
-        // HEADER
         PdfPTable header = new PdfPTable(2);
         header.setWidthPercentage(100);
         header.setWidths(new float[]{3, 2});
@@ -161,7 +193,6 @@ public class CotizacionService {
         propuesta.addCell(cPropuesta);
         doc.add(propuesta);
 
-        // Tabla detalles — ahora con columna de descuento
         PdfPTable tabla = new PdfPTable(5);
         tabla.setWidthPercentage(100);
         tabla.setWidths(new float[]{4.5f, 1.2f, 1.2f, 1.2f, 2f});

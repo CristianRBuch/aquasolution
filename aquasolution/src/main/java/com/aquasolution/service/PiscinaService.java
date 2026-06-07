@@ -21,14 +21,30 @@ public class PiscinaService {
     }
 
     public Piscina guardar(Piscina piscina) {
-        // Calcular volumen automáticamente según tipo
         double volumen;
-        if (piscina.getTipo() == Piscina.TipoPiscina.CIRCULAR) {
-            volumen = calculoUtil.calcularVolumenCircular(
-                    piscina.getLargo(), piscina.getProfundidadPromedio());
-        } else {
-            volumen = calculoUtil.calcularVolumenRectangular(
-                    piscina.getLargo(), piscina.getAncho(), piscina.getProfundidadPromedio());
+        switch (piscina.getTipo()) {
+            case CIRCULAR:
+                volumen = calculoUtil.calcularVolumenCircular(
+                        piscina.getLargo(), piscina.getProfundidadPromedio());
+                break;
+            case OVAL:
+                volumen = calculoUtil.calcularVolumenOvalGalones(
+                        calculoUtil.metrosAPies(piscina.getLargo()),
+                        calculoUtil.metrosAPies(piscina.getAncho()),
+                        calculoUtil.metrosAPies(piscina.getProfundidadPromedio()));
+                volumen = calculoUtil.galonesAMetrosCubicos(volumen);
+                break;
+            case RINON:
+                volumen = calculoUtil.calcularVolumenRinonGalones(
+                        calculoUtil.metrosAPies(piscina.getLargo()),
+                        calculoUtil.metrosAPies(piscina.getAncho()),
+                        calculoUtil.metrosAPies(piscina.getProfundidadPromedio()));
+                volumen = calculoUtil.galonesAMetrosCubicos(volumen);
+                break;
+            default: // RECTANGULAR, IRREGULAR
+                volumen = calculoUtil.calcularVolumenRectangular(
+                        piscina.getLargo(), piscina.getAncho(), piscina.getProfundidadPromedio());
+                break;
         }
         piscina.setVolumen(calculoUtil.redondear(volumen));
         return piscinaRepository.save(piscina);

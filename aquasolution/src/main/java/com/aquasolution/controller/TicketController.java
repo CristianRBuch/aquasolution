@@ -65,19 +65,19 @@ public class TicketController {
         }
 
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
+        String usuarioActual = authentication.getName();
+
         if (rol.equals("TECNICO")) {
-            // Técnico se autoasigna
-            Usuario tecnico = usuarioService.obtenerPorUsername(authentication.getName())
+            Usuario tecnico = usuarioService.obtenerPorUsername(usuarioActual)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             ticket.setTecnico(tecnico);
         } else if (tecnicoId != null) {
-            // Admin puede asignar a cualquier técnico
             Usuario tecnico = usuarioService.obtenerPorId(tecnicoId).orElse(null);
             ticket.setTecnico(tecnico);
         }
 
         ticket.setEstado(Ticket.EstadoTicket.ABIERTO);
-        ticketService.guardar(ticket);
+        ticketService.guardar(ticket, usuarioActual, rol);
         redirect.addFlashAttribute("exito", "Ticket creado correctamente.");
         return "redirect:/tickets";
     }
@@ -89,27 +89,33 @@ public class TicketController {
                                  Authentication authentication,
                                  RedirectAttributes redirect) {
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
+        String usuarioActual = authentication.getName();
+
         if (!rol.equals("ADMIN")) {
             redirect.addFlashAttribute("error", "No tienes permisos para reasignar tickets.");
             return "redirect:/tickets";
         }
         Usuario tecnico = usuarioService.obtenerPorId(tecnicoId)
                 .orElseThrow(() -> new RuntimeException("Técnico no encontrado"));
-        Ticket ticket = ticketService.asignarTecnico(id, tecnico);
+        Ticket ticket = ticketService.asignarTecnico(id, tecnico, usuarioActual, rol);
 
         if (fechaVisita != null && !fechaVisita.isEmpty()) {
             ticket.setFechaVisita(java.time.LocalDateTime.parse(fechaVisita + "T00:00:00"));
-            ticketService.guardar(ticket);
+            ticketService.guardar(ticket, usuarioActual, rol);
         }
 
         redirect.addFlashAttribute("exito", "Técnico asignado correctamente.");
         return "redirect:/tickets";
     }
+
     @GetMapping("/estado/{id}")
     public String cambiarEstado(@PathVariable Long id,
                                 @RequestParam String estado,
+                                Authentication authentication,
                                 RedirectAttributes redirect) {
-        ticketService.cambiarEstado(id, Ticket.EstadoTicket.valueOf(estado));
+        String rol = authentication.getAuthorities().iterator().next().getAuthority();
+        String usuarioActual = authentication.getName();
+        ticketService.cambiarEstado(id, Ticket.EstadoTicket.valueOf(estado), usuarioActual, rol);
         redirect.addFlashAttribute("exito", "Estado actualizado correctamente.");
         return "redirect:/tickets";
     }
@@ -119,11 +125,13 @@ public class TicketController {
                                  Authentication authentication,
                                  RedirectAttributes redirect) {
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
+        String usuarioActual = authentication.getName();
+
         if (!rol.equals("ADMIN")) {
             redirect.addFlashAttribute("error", "No tienes permisos para eliminar tickets.");
             return "redirect:/tickets";
         }
-        ticketService.eliminar(id);
+        ticketService.eliminar(id, usuarioActual, rol);
         redirect.addFlashAttribute("exito", "Ticket eliminado correctamente.");
         return "redirect:/tickets";
     }

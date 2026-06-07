@@ -3,6 +3,8 @@ package com.aquasolution.controller;
 import com.aquasolution.model.Ticket;
 import com.aquasolution.model.Usuario;
 import com.aquasolution.service.CotizacionService;
+import com.aquasolution.service.DosificacionService;
+import com.aquasolution.service.ReporteServicioService;
 import com.aquasolution.service.TicketService;
 import com.aquasolution.service.UsuarioService;
 import org.springframework.security.core.Authentication;
@@ -17,13 +19,19 @@ public class ClienteController {
     private final TicketService ticketService;
     private final CotizacionService cotizacionService;
     private final UsuarioService usuarioService;
+    private final ReporteServicioService reporteService;
+    private final DosificacionService dosificacionService;
 
     public ClienteController(TicketService ticketService,
                              CotizacionService cotizacionService,
-                             UsuarioService usuarioService) {
+                             UsuarioService usuarioService,
+                             ReporteServicioService reporteService,
+                             DosificacionService dosificacionService) {
         this.ticketService = ticketService;
         this.cotizacionService = cotizacionService;
         this.usuarioService = usuarioService;
+        this.reporteService = reporteService;
+        this.dosificacionService = dosificacionService;
     }
 
     @GetMapping("/registro")
@@ -56,11 +64,20 @@ public class ClienteController {
         Usuario cliente = usuarioService.obtenerPorUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        var tickets = ticketService.obtenerPorCliente(cliente);
+        var cotizaciones = cotizacionService.obtenerPorCliente(cliente);
+        var reportes = reporteService.obtenerPorCliente(cliente);
+        var dosificaciones = dosificacionService.obtenerPorCliente(cliente);
+
         model.addAttribute("cliente", cliente);
-        model.addAttribute("tickets", ticketService.obtenerPorCliente(cliente));
-        model.addAttribute("cotizaciones", cotizacionService.obtenerPorCliente(cliente));
-        model.addAttribute("totalTickets", ticketService.obtenerPorCliente(cliente).size());
-        model.addAttribute("totalCotizaciones", cotizacionService.obtenerPorCliente(cliente).size());
+        model.addAttribute("tickets", tickets);
+        model.addAttribute("cotizaciones", cotizaciones);
+        model.addAttribute("reportes", reportes);
+        model.addAttribute("dosificaciones", dosificaciones);
+        model.addAttribute("totalTickets", tickets.size());
+        model.addAttribute("totalCotizaciones", cotizaciones.size());
+        model.addAttribute("totalReportes", reportes.size());
+        model.addAttribute("totalDosificaciones", dosificaciones.size());
         return "cliente/inicio";
     }
 
@@ -83,14 +100,12 @@ public class ClienteController {
         Usuario cliente = usuarioService.obtenerPorUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Construir dirección completa — va en su propia columna
         StringBuilder direccion = new StringBuilder();
         if (departamento != null && !departamento.isEmpty()) direccion.append(departamento);
         if (municipio != null && !municipio.isEmpty()) direccion.append(", ").append(municipio);
         if (zona != null && !zona.isEmpty()) direccion.append(", ").append(zona);
         if (direccionExacta != null && !direccionExacta.isEmpty()) direccion.append(" — ").append(direccionExacta);
 
-        // Observaciones — solo disponibilidad, teléfono y equipo
         StringBuilder obs = new StringBuilder();
         if (observaciones != null && !observaciones.isEmpty()) obs.append("Disponibilidad: ").append(observaciones).append("\n");
         if (telefono != null && !telefono.isEmpty()) obs.append("Teléfono: ").append(telefono).append("\n");
@@ -101,7 +116,7 @@ public class ClienteController {
         ticket.setDescripcion(descripcion);
         ticket.setPrioridad(Ticket.PrioridadTicket.valueOf(prioridad));
         ticket.setObservaciones(obs.toString());
-        ticket.setDireccion(direccion.toString()); // columna propia
+        ticket.setDireccion(direccion.toString());
         ticket.setCliente(cliente);
         ticket.setEstado(Ticket.EstadoTicket.ABIERTO);
         ticketService.guardar(ticket);

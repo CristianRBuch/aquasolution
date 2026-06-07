@@ -53,6 +53,11 @@
           <i class="fas fa-users me-2"></i> Usuarios
         </a>
       </li>
+      <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
+        <a class="nav-link" th:href="@{/auditoria}">
+          <i class="fas fa-shield-alt me-2"></i> Auditoría
+        </a>
+      </li>
       <li>
         <p class="nav-section">Operaciones</p>
       </li>
@@ -218,7 +223,7 @@
                   <input type="tel" name="telefono" class="form-control rounded-3"
                          th:value="${usuario.telefono}" required
                          pattern="[0-9]{8}" maxlength="8" placeholder="Ej: 55551234"
-                         title="Ingresa exactamente 8 dígitos"><input type="text" name="telefono" class="form-control rounded-3" th:value="${usuario.telefono}" required>
+                         title="Ingresa exactamente 8 dígitos">
                 </div>
                 <div class="col-md-6">
                   <label class="form-label fw-semibold">Rol</label>

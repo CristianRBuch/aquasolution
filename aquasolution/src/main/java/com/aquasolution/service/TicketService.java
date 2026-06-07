@@ -13,13 +13,28 @@ import java.util.stream.Collectors;
 public class TicketService {
 
     private final TicketRepository ticketRepository;
+    private final AuditoriaService auditoriaService;
 
-    public TicketService(TicketRepository ticketRepository) {
+    public TicketService(TicketRepository ticketRepository, AuditoriaService auditoriaService) {
         this.ticketRepository = ticketRepository;
+        this.auditoriaService = auditoriaService;
+    }
+
+    public Ticket guardar(Ticket ticket, String usuarioActual, String rolActual) {
+        boolean esNuevo = (ticket.getId() == null);
+        Ticket guardado = ticketRepository.save(ticket);
+        if (esNuevo) {
+            auditoriaService.registrar(usuarioActual, rolActual, "CREATE", "Tickets",
+                    "Se creó el ticket #" + guardado.getId() + " - " + guardado.getDescripcion());
+        } else {
+            auditoriaService.registrar(usuarioActual, rolActual, "UPDATE", "Tickets",
+                    "Se actualizó el ticket #" + guardado.getId());
+        }
+        return guardado;
     }
 
     public Ticket guardar(Ticket ticket) {
-        return ticketRepository.save(ticket);
+        return guardar(ticket, "Sistema", "SISTEMA");
     }
 
     public List<Ticket> obtenerTodos() {
@@ -47,7 +62,6 @@ public class TicketService {
     }
 
     public List<Usuario> obtenerClientesPorTecnico(Usuario tecnico) {
-        // Obtiene clientes únicos de todos los tickets asignados al técnico
         return ticketRepository.findByTecnico(tecnico)
                 .stream()
                 .map(Ticket::getCliente)
@@ -55,26 +69,47 @@ public class TicketService {
                 .collect(Collectors.toList());
     }
 
-    public Ticket cambiarEstado(Long id, Ticket.EstadoTicket nuevoEstado) {
+    public Ticket cambiarEstado(Long id, Ticket.EstadoTicket nuevoEstado, String usuarioActual, String rolActual) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
+        Ticket.EstadoTicket estadoAnterior = ticket.getEstado();
         ticket.setEstado(nuevoEstado);
         if (nuevoEstado == Ticket.EstadoTicket.CERRADO) {
             ticket.setFechaCierre(LocalDateTime.now());
         }
-        return ticketRepository.save(ticket);
+        Ticket guardado = ticketRepository.save(ticket);
+        auditoriaService.registrar(usuarioActual, rolActual, "UPDATE", "Tickets",
+                "Ticket #" + id + " cambió estado de " + estadoAnterior + " a " + nuevoEstado);
+        return guardado;
     }
 
-    public Ticket asignarTecnico(Long ticketId, Usuario tecnico) {
+    public Ticket cambiarEstado(Long id, Ticket.EstadoTicket nuevoEstado) {
+        return cambiarEstado(id, nuevoEstado, "Sistema", "SISTEMA");
+    }
+
+    public Ticket asignarTecnico(Long ticketId, Usuario tecnico, String usuarioActual, String rolActual) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
         ticket.setTecnico(tecnico);
         ticket.setEstado(Ticket.EstadoTicket.EN_PROCESO);
-        return ticketRepository.save(ticket);
+        Ticket guardado = ticketRepository.save(ticket);
+        auditoriaService.registrar(usuarioActual, rolActual, "UPDATE", "Tickets",
+                "Ticket #" + ticketId + " asignado a técnico: " + tecnico.getNombreCompleto());
+        return guardado;
+    }
+
+    public Ticket asignarTecnico(Long ticketId, Usuario tecnico) {
+        return asignarTecnico(ticketId, tecnico, "Sistema", "SISTEMA");
+    }
+
+    public void eliminar(Long id, String usuarioActual, String rolActual) {
+        auditoriaService.registrar(usuarioActual, rolActual, "DELETE", "Tickets",
+                "Se eliminó el ticket #" + id);
+        ticketRepository.deleteById(id);
     }
 
     public void eliminar(Long id) {
-        ticketRepository.deleteById(id);
+        eliminar(id, "Sistema", "SISTEMA");
     }
 
     public List<Ticket> obtenerUltimos5() {
